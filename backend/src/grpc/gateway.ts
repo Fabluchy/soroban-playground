@@ -73,18 +73,24 @@ export interface SorobanServiceClient extends grpc.Client {
 }
 
 interface ProtoField {
+  name: string;
   type: string;
-  rule?: string;
-  map?: boolean;
-  resolvedType?: {
-    name?: string;
-    fields?: Record<string, ProtoField>;
-    values?: Record<string, number>;
-  };
+  typeName?: string;
+  label?: string;
+}
+
+interface ProtoNestedMessage extends ProtoMessageFields {
+  name: string;
+  options?: { mapEntry?: boolean };
+}
+
+interface ProtoMessageFields {
+  field?: ProtoField[];
+  nestedType?: ProtoNestedMessage[];
 }
 
 interface ProtoMessage {
-  type: { fields: Record<string, ProtoField> };
+  type: ProtoMessageFields;
 }
 
 interface ProtoMethod {
@@ -157,22 +163,32 @@ const httpBindings: HttpBinding[] = [
 
 function toOpenApiType(type: string): Record<string, unknown> {
   switch (type) {
-    case 'bool':
+    case 'TYPE_BOOL':
       return { type: 'boolean' };
-    case 'int32':
-    case 'uint32':
+    case 'TYPE_INT32':
+    case 'TYPE_UINT32':
+    case 'TYPE_SINT32':
+    case 'TYPE_FIXED32':
+    case 'TYPE_SFIXED32':
       return { type: 'integer', format: 'int32' };
-    case 'int64':
-    case 'uint64':
+    case 'TYPE_INT64':
+    case 'TYPE_UINT64':
+    case 'TYPE_SINT64':
+    case 'TYPE_FIXED64':
+    case 'TYPE_SFIXED64':
       return { type: 'string', format: 'int64' };
-    case 'double':
+    case 'TYPE_DOUBLE':
       return { type: 'number', format: 'double' };
-    case 'float':
+    case 'TYPE_FLOAT':
       return { type: 'number', format: 'float' };
+    case 'TYPE_BYTES':
+      return { type: 'string', format: 'byte' };
     default:
       return { type: 'string' };
   }
 }
+
+const PROTO_PACKAGE = 'soroban_playground.';
 
 function toJsonName(fieldName: string): string {
   return fieldName.replace(/_([a-z0-9])/g, (_match, character: string) =>
@@ -180,35 +196,65 @@ function toJsonName(fieldName: string): string {
   );
 }
 
-function messageSchema(name: string): Record<string, unknown> {
-  const definition = definitions[`soroban_playground.${name}`] as
+function shortTypeName(name: string): string {
+  return name.startsWith(PROTO_PACKAGE)
+    ? name.slice(PROTO_PACKAGE.length)
+    : name;
+}
+
+function resolveMessage(name: string): ProtoMessageFields | undefined {
+  const definition = definitions[`${PROTO_PACKAGE}${shortTypeName(name)}`] as
     ProtoMessage | undefined;
-  if (!definition || !('type' in definition)) {
+  return definition?.type;
+}
+
+function findMapEntry(
+  field: ProtoField,
+  owner: ProtoMessageFields
+): ProtoNestedMessage | undefined {
+  if (!field.typeName || field.type !== 'TYPE_MESSAGE') return undefined;
+  const nested = owner.nestedType?.find(
+    (entry) => entry.name === field.typeName
+  );
+  return nested?.options?.mapEntry ? nested : undefined;
+}
+
+function fieldSchema(
+  field: ProtoField,
+  owner: ProtoMessageFields
+): Record<string, unknown> {
+  const mapEntry = findMapEntry(field, owner);
+  if (mapEntry) {
+    const value = mapEntry.field?.find((entry) => entry.name === 'value');
+    return {
+      type: 'object',
+      additionalProperties: value
+        ? fieldSchema(value, mapEntry)
+        : { type: 'string' },
+    };
+  }
+  if (field.type === 'TYPE_MESSAGE' && field.typeName) {
+    return { $ref: `#/components/schemas/${shortTypeName(field.typeName)}` };
+  }
+  if (field.type === 'TYPE_ENUM') {
+    return { type: 'string' };
+  }
+  return toOpenApiType(field.type);
+}
+
+function messageSchema(name: string): Record<string, unknown> {
+  const definition = resolveMessage(name);
+  if (!definition) {
     throw new Error(`Missing protobuf message definition: ${name}`);
   }
 
   const properties: Record<string, unknown> = {};
-  for (const [fieldName, field] of Object.entries(definition.type.fields)) {
-    let schema: Record<string, unknown>;
-    if (field.map) {
-      schema = {
-        type: 'object',
-        additionalProperties: toOpenApiType(field.type),
-      };
-    } else if (field.resolvedType?.fields && field.resolvedType.name) {
-      schema = { $ref: `#/components/schemas/${field.resolvedType.name}` };
-    } else if (field.resolvedType?.values) {
-      schema = {
-        type: 'string',
-        enum: Object.keys(field.resolvedType.values),
-      };
-    } else {
-      schema = toOpenApiType(field.type);
-    }
-    if (field.rule === 'repeated') {
+  for (const field of definition.field ?? []) {
+    let schema = fieldSchema(field, definition);
+    if (field.label === 'LABEL_REPEATED' && !findMapEntry(field, definition)) {
       schema = { type: 'array', items: schema };
     }
-    properties[toJsonName(fieldName)] = schema;
+    properties[toJsonName(field.name)] = schema;
   }
 
   return { type: 'object', properties };
@@ -218,16 +264,22 @@ function addMessageSchema(name: string, schemas: Record<string, unknown>) {
   if (Object.prototype.hasOwnProperty.call(schemas, name)) return;
 
   schemas[name] = { type: 'object', properties: {} };
-  const definition = definitions[`soroban_playground.${name}`] as
-    ProtoMessage | undefined;
-  if (!definition || !('type' in definition)) {
+  const definition = resolveMessage(name);
+  if (!definition) {
     throw new Error(`Missing protobuf message definition: ${name}`);
   }
 
-  for (const field of Object.values(definition.type.fields)) {
-    if (field.resolvedType?.fields && field.resolvedType.name) {
-      addMessageSchema(field.resolvedType.name, schemas);
+  for (const field of definition.field ?? []) {
+    if (field.type !== 'TYPE_MESSAGE' || !field.typeName) continue;
+    const mapEntry = findMapEntry(field, definition);
+    if (mapEntry) {
+      const value = mapEntry.field?.find((entry) => entry.name === 'value');
+      if (value?.type === 'TYPE_MESSAGE' && value.typeName) {
+        addMessageSchema(shortTypeName(value.typeName), schemas);
+      }
+      continue;
     }
+    addMessageSchema(shortTypeName(field.typeName), schemas);
   }
   schemas[name] = messageSchema(name);
 }
