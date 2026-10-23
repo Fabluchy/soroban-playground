@@ -196,9 +196,9 @@ async function waitForEditor(page: Page) {
  *  that does not depend on `window.monaco` being exposed. */
 async function setEditorSource(page: Page, source: string) {
   await waitForEditor(page);
-  await page.getByTestId("monaco-editor").first().click();
-  await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.press("Delete");
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("Control+a");
+  await page.keyboard.press("Backspace");
   await page.keyboard.insertText(source);
 }
 
@@ -345,6 +345,12 @@ test.describe("playground lifecycle", () => {
       timeout: 30_000,
     });
 
+    await page
+      .getByRole("button", { name: "Generate salt", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Run pre-flight checks", exact: true })
+      .click();
     await page.getByRole("button", { name: /^Deploy to / }).click();
     await expect(page.getByText(CONTRACT_ID).first()).toBeVisible({
       timeout: 30_000,
