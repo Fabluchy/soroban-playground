@@ -253,10 +253,8 @@ export function buildGrpcOpenApiSpec() {
     const serviceDefinition = definitions[
       'soroban_playground.SorobanService'
     ] as unknown as Record<string, ProtoMethod>;
-    const method =
-      serviceDefinition[
-        binding.rpcName[0].toLowerCase() + binding.rpcName.slice(1)
-      ];
+    // keepCase preserves the proto method casing, so look up the RPC as-is.
+    const method = serviceDefinition[binding.rpcName];
     if (!method) {
       throw new Error(`Missing protobuf RPC definition: ${binding.rpcName}`);
     }

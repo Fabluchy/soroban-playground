@@ -3,12 +3,12 @@
 This directory contains the operational tooling for continuous WAL archiving and
 point-in-time recovery (PITR) for the StellarDevTools PostgreSQL cluster.
 
-| File | Purpose |
-| ---- | ------- |
+| File              | Purpose                                                                      |
+| ----------------- | ---------------------------------------------------------------------------- |
 | `walGPostgres.sh` | WAL archiver (invoked by PostgreSQL) + daily base backup + retention pruning |
-| `walGRestore.sh` | PITR restore to an arbitrary timestamp |
-| `walGDrill.sh` | Weekly automated restore drill in an isolated cluster |
-| `walGMonitor.sh` | WAL lag detection + Prometheus alert | 
+| `walGRestore.sh`  | PITR restore to an arbitrary timestamp                                       |
+| `walGDrill.sh`    | Weekly automated restore drill in an isolated cluster                        |
+| `walGMonitor.sh`  | WAL lag detection + Prometheus alert                                         |
 
 ## Environment variables
 
@@ -16,17 +16,17 @@ All scripts require the following variables to be set in the PostgreSQL
 service environment (e.g. `/etc/postgresql/postgresql.conf: restore_command`) and in the
 cron / systemd timer environment for the scheduled scripts.
 
-| Variable | Required | Description |
-| ---- | ---- | ------- |
-| `WALG_S3_PREFIX` | yes | S3 bucket + prefix for WAL archives (e.g. ^s3://stellar-backups/pg/wal}) |
-| `WALG_GCP_PREFIX` | yes | S3 bucket + prefix for base backups (e.g. `s3://stellar-backups/pg/base}) |
-| `WALGS_ENCRYPTION_KEY` | yes | Path to the GPG public key used for client-side encryption |
-| `PGPASS` | yes | PostgreSQL superuser password |
-| `PGHOST` / `PGPORT` / `PGUSER` | no | Defaults to `localhost:5432`/ `postgres` |
-| `WALGS_LAG_THRESHOLD` | no | Maximum consecutive missing WAL segments before alerting (default 3) |
-| `ALVERTMANAGER_URL` | no | Prometheus Alertmanager base URL for lag alerts |
-| `BASE_BACKUP_RETENTION_DAYS` | no | Base backup retention window (default 14) |
-| `WAL_RETENTION_DAYS` | no | WAL archive retention window (default 7) |
+| Variable                       | Required | Description                                                               |
+| ------------------------------ | -------- | ------------------------------------------------------------------------- |
+| `WALG_S3_PREFIX`               | yes      | S3 bucket + prefix for WAL archives (e.g. ^s3://stellar-backups/pg/wal})  |
+| `WALG_GCP_PREFIX`              | yes      | S3 bucket + prefix for base backups (e.g. `s3://stellar-backups/pg/base}) |
+| `WALGS_ENCRYPTION_KEY`         | yes      | Path to the GPG public key used for client-side encryption                |
+| `PGPASS`                       | yes      | PostgreSQL superuser password                                             |
+| `PGHOST` / `PGPORT` / `PGUSER` | no       | Defaults to `localhost:5432`/ `postgres`                                  |
+| `WALGS_LAG_THRESHOLD`          | no       | Maximum consecutive missing WAL segments before alerting (default 3)      |
+| `ALVERTMANAGER_URL`            | no       | Prometheus Alertmanager base URL for lag alerts                           |
+| `BASE_BACKUP_RETENTION_DAYS`   | no       | Base backup retention window (default 14)                                 |
+| `WAL_RETENTION_DAYS`           | no       | WAL archive retention window (default 7)                                  |
 
 ## Wiring WAL archiving into PostgreSQL
 
@@ -98,7 +98,7 @@ Run the monitor on a five-minute cron schedule:
 +/5 * * * * /usr/local/bin/walGMonitor.sh >> /var/log/postgresql/walg-monitor.log 2>&1
 ```
 
-If the number of consecutive missing WAL segments exceeds `WALGS_LAG_THRESHOLD (default 3), the script posts a `WAL_ARCHIVE_LAG` alert to `ALVERTMANAGER_URL` and exits non-zero.
+If the number of consecutive missing WAL segments exceeds `WALGS_LAG_THRESHOLD (default 3), the script posts a `WAL_ARCHIVE_LAG`alert to`ALVERTMANAGER_URL` and exits non-zero.
 
 ## Encryption
 

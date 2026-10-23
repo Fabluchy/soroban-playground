@@ -22,16 +22,16 @@ This document describes the gRPC communication layer in `backend/src/grpc/`.
 
 ## Files
 
-| File                    | Purpose                                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `soroban_indexer.proto` | Protocol Buffer definitions for the `IndexerService`                                                                   |
-| `soroban.proto`         | Canonical Soroban compile, simulate, deploy, and compile-stream contracts with HTTP annotations                       |
-| `server.js`             | gRPC server — implements `IndexerService` handlers and exposes `grpcEventBus`                                           |
-| `sorobanService.js`     | Authenticated compile, simulate, deploy, and bidirectional compile-stream handlers                                       |
-| `gateway.ts`            | REST-to-gRPC proxy and OpenAPI 3.1 generator driven by `soroban.proto` HTTP annotations                                  |
-| `client.js`             | `GrpcClient` — promise-wrapped stub with exponential-backoff retry                                                      |
-| `serviceRegistry.js`    | `ServiceRegistry` — health-polling, round-robin load balancing, TTL eviction                                            |
-| `index.js`              | Re-exports the gRPC server, Soroban client, REST gateway, and service registry APIs |
+| File                    | Purpose                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `soroban_indexer.proto` | Protocol Buffer definitions for the `IndexerService`                                            |
+| `soroban.proto`         | Canonical Soroban compile, simulate, deploy, and compile-stream contracts with HTTP annotations |
+| `server.js`             | gRPC server — implements `IndexerService` handlers and exposes `grpcEventBus`                   |
+| `sorobanService.js`     | Authenticated compile, simulate, deploy, and bidirectional compile-stream handlers              |
+| `gateway.ts`            | REST-to-gRPC proxy and OpenAPI 3.1 generator driven by `soroban.proto` HTTP annotations         |
+| `client.js`             | `GrpcClient` — promise-wrapped stub with exponential-backoff retry                              |
+| `serviceRegistry.js`    | `ServiceRegistry` — health-polling, round-robin load balancing, TTL eviction                    |
+| `index.js`              | Re-exports the gRPC server, Soroban client, REST gateway, and service registry APIs             |
 
 ---
 
@@ -111,17 +111,17 @@ const endpoint = serviceRegistry.resolve('indexer');
 
 ## Environment Variables
 
-| Variable            | Default     | Description                     |
-| ------------------- | ----------- | ------------------------------- |
-| `GRPC_PORT`         | `50051`     | Port the gRPC server binds to   |
-| `GRPC_HOST`         | `127.0.0.1` | gRPC bind address; use TLS before binding to a public interface |
-| `GRPC_ENABLED`      | `true`      | Set to `false` to disable gRPC and its REST gateway |
-| `GRPC_TLS`          | `false`     | Enable gRPC TLS using `SSL_KEY_PATH` and `SSL_CERT_PATH` |
-| `GRPC_GATEWAY_HOST` | `127.0.0.1` | gRPC address used by the local REST proxy |
-| `GRPC_GATEWAY_DEADLINE_MS` | `120000` | Gateway gRPC deadline |
-| `GRPC_AUTH_TOKEN` | unset | Access token for `GrpcClient` inter-service calls |
-| `GRPC_INDEXER_HOST` | `localhost` | Indexer host used by GrpcClient |
-| `GRPC_INDEXER_PORT` | `50051` | Indexer port used by GrpcClient |
+| Variable                   | Default     | Description                                                     |
+| -------------------------- | ----------- | --------------------------------------------------------------- |
+| `GRPC_PORT`                | `50051`     | Port the gRPC server binds to                                   |
+| `GRPC_HOST`                | `127.0.0.1` | gRPC bind address; use TLS before binding to a public interface |
+| `GRPC_ENABLED`             | `true`      | Set to `false` to disable gRPC and its REST gateway             |
+| `GRPC_TLS`                 | `false`     | Enable gRPC TLS using `SSL_KEY_PATH` and `SSL_CERT_PATH`        |
+| `GRPC_GATEWAY_HOST`        | `127.0.0.1` | gRPC address used by the local REST proxy                       |
+| `GRPC_GATEWAY_DEADLINE_MS` | `120000`    | Gateway gRPC deadline                                           |
+| `GRPC_AUTH_TOKEN`          | unset       | Access token for `GrpcClient` inter-service calls               |
+| `GRPC_INDEXER_HOST`        | `localhost` | Indexer host used by GrpcClient                                 |
+| `GRPC_INDEXER_PORT`        | `50051`     | Indexer port used by GrpcClient                                 |
 
 ## Soroban dual-protocol API
 
