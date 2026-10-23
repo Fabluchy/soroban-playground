@@ -28,19 +28,15 @@ import http from 'http';
 import { jest } from '@jest/globals';
 
 // ── Mock http.request before importing the module under test ──────────────────
-jest.mock('http', () => {
-  const actual = jest.requireActual('http');
-  return {
-    ...actual,
-    request: jest.fn(),
-  };
+jest.spyOn(http, 'request').mockImplementation(() => {
+  throw new Error('http.request was not stubbed by the test');
 });
 
 // ── Import after mock registration ────────────────────────────────────────────
 import {
   EphemeralQuickstartOrchestrator,
   EphemeralQuickstartError,
-} from '../src/services/docker/ephemeralQuickstart.js';
+} from '../src/services/docker/ephemeralQuickstart.ts';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

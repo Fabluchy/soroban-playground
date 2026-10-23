@@ -26,7 +26,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    bytes, contract, contractimpl, contracttype, symbol_short, Address, Bytes, Env, Symbol,
+    contract, contractimpl, contracttype, symbol_short, Address, Bytes, Env, Symbol,
 };
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -409,12 +409,7 @@ impl CarbonCredits {
         // Build a fixed-size byte representation of the key fields.
         // Layout: cert_id (8 bytes) | amount (16 bytes) | batch_id (8 bytes)
         // Address bytes are hashed symbolically via their debug representation.
-        let mut raw = bytes!(
-            env, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // cert_id placeholder
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // amount lo
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // amount hi
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        ); // batch_id
+        let mut raw = Bytes::from_array(env, &[0u8; 32]);
 
         // Encode cert_id
         let id_bytes = cert_id.to_be_bytes();

@@ -95,11 +95,11 @@ impl GasSponsorTank {
         Ok(())
     }
 
-    fn sponsor(env: &Env) -> Address {
+    fn sponsor(env: &Env) -> Result<Address, Error> {
         env.storage()
             .instance()
             .get(&SPONSOR_KEY)
-            .unwrap_or_else(|| Address::generate(env))
+            .ok_or(Error::NotInitialized)
     }
 
     // ── DApp reserves ───────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ impl GasSponsorTank {
     /// Whitelists a target contract for sponsored calls (admin only).
     pub fn whitelist_contract(env: Env, caller: Address, target: Address) -> Result<(), Error> {
         Self::ensure_initialized(&env)?;
-        if caller != Self::sponsor(&env) {
+        if caller != Self::sponsor(&env)? {
             return Err(Error::Unauthorized);
         }
         env.storage()
@@ -163,7 +163,7 @@ impl GasSponsorTank {
         method: Symbol,
     ) -> Result<(), Error> {
         Self::ensure_initialized(&env)?;
-        if caller != Self::sponsor(&env) {
+        if caller != Self::sponsor(&env)? {
             return Err(Error::Unauthorized);
         }
         env.storage().persistent().set(
@@ -180,7 +180,7 @@ impl GasSponsorTank {
     /// Sets the daily gas quota for a user (admin only).
     pub fn set_quota(env: Env, caller: Address, user: Address, quota: i128) -> Result<(), Error> {
         Self::ensure_initialized(&env)?;
-        if caller != Self::sponsor(&env) {
+        if caller != Self::sponsor(&env)? {
             return Err(Error::Unauthorized);
         }
         env.storage()

@@ -45,7 +45,8 @@
 //! returns to the round's funder.
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, symbol_short, token, Address, Env, Map, String, Vec,
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Map,
+    String, Vec,
 };
 
 /// Fixed-point scale for integer square roots (10^6).
@@ -230,7 +231,7 @@ impl QuadraticGrants {
         if matching_pool > MAX_POOL {
             return Err(Error::PoolTooLarge);
         }
-        if deadline_ledger <= env.ledger().sequence() {
+        if deadline_ledger <= u64::from(env.ledger().sequence()) {
             return Err(Error::InvalidDeadline);
         }
         funder.require_auth();
@@ -255,6 +256,7 @@ impl QuadraticGrants {
         env.storage().persistent().set(&DataKey::Round(id), &round);
 
         token::Client::new(&env, &Self::token(&env)?).transfer_from(
+            &env.current_contract_address(),
             &funder,
             &env.current_contract_address(),
             &matching_pool,
@@ -364,7 +366,7 @@ impl QuadraticGrants {
         if round.closed {
             return Err(Error::RoundClosed);
         }
-        if env.ledger().sequence() > round.deadline_ledger {
+        if u64::from(env.ledger().sequence()) > round.deadline_ledger {
             return Err(Error::RoundOver);
         }
         if donor == project.owner {
@@ -392,6 +394,7 @@ impl QuadraticGrants {
             .set(&DataKey::Project(project_id), &project);
 
         token::Client::new(&env, &Self::token(&env)?).transfer_from(
+            &env.current_contract_address(),
             &donor,
             &env.current_contract_address(),
             &amount,
@@ -421,7 +424,7 @@ impl QuadraticGrants {
             .instance()
             .get(&DataKey::Admin)
             .ok_or(Error::NotAuthorized)?;
-        if caller != admin && env.ledger().sequence() <= round.deadline_ledger {
+        if caller != admin && u64::from(env.ledger().sequence()) <= round.deadline_ledger {
             return Err(Error::RoundOver);
         }
         caller.require_auth();
@@ -769,13 +772,13 @@ impl QuadraticGrants {
         let mut sum_sq: u128 = 0;
         let mut sum_c: u128 = 0;
         for c in contributions.iter() {
-            if *c <= 0 {
+            if c <= 0 {
                 return Err(Error::ZeroAmount);
             }
-            if *c > MAX_CONTRIBUTION {
+            if c > MAX_CONTRIBUTION {
                 return Err(Error::ContributionTooLarge);
             }
-            let cu = *c as u128;
+            let cu = c as u128;
             sum_c = sum_c.checked_add(cu).ok_or(Error::ArithmeticError)?;
             let scaled = cu.checked_mul(SCALE_SQ).ok_or(Error::ArithmeticError)?;
             sum_sq = sum_sq
@@ -804,7 +807,11 @@ impl QuadraticGrants {
         total_weight: i128,
     ) -> Result<Vec<i128>, Error> {
         if total_weight <= 0 {
-            return Ok(vec![&env, 0; weights.len()]);
+            let mut zeroes = Vec::new(env);
+            for _ in 0..weights.len() {
+                zeroes.push_back(0i128);
+            }
+            return Ok(zeroes);
         }
         let pool_u = pool as u128;
         let tw_u = total_weight as u128;
@@ -813,12 +820,12 @@ impl QuadraticGrants {
         let mut allocated: u128 = 0;
         for w in weights.iter() {
             let award_u = pool_u
-                .checked_mul(*w as u128)
+                .checked_mul(w as u128)
                 .ok_or(Error::ArithmeticError)?
                 .checked_div(tw_u)
                 .ok_or(Error::ArithmeticError)?;
             let rem_u = pool_u
-                .checked_mul(*w as u128)
+                .checked_mul(w as u128)
                 .ok_or(Error::ArithmeticError)?
                 .checked_rem(tw_u)
                 .ok_or(Error::ArithmeticError)?;
@@ -842,18 +849,18 @@ impl QuadraticGrants {
             for j in (i + 1)..order.len() {
                 let a = order.get(i).unwrap();
                 let b = order.get(j).unwrap();
-                if remainders.get(*b as usize).unwrap() > remainders.get(*a as usize).unwrap() {
-                    order.set(i, *b);
-                    order.set(j, *a);
+                if remainders.get(b).unwrap() > remainders.get(a).unwrap() {
+                    order.set(i, b);
+                    order.set(j, a);
                 }
             }
         }
         let mut idx = 0;
         while leftover > 0 && idx < order.len() {
             let p = order.get(idx).unwrap();
-            let mut award = awards.get(*p as usize).unwrap();
+            let mut award = awards.get(p).unwrap();
             award = award.checked_add(1).ok_or(Error::ArithmeticError)?;
-            awards.set(*p as usize, award);
+            awards.set(p, award);
             leftover -= 1;
             idx += 1;
         }

@@ -366,7 +366,7 @@ impl VrfLottery {
 
         // Verify commitment: SHA-256(seed) == commitment
         let seed_bytes: Bytes = seed.clone().into();
-        let hash: BytesN<32> = env.crypto().sha256(&seed_bytes);
+        let hash: BytesN<32> = env.crypto().sha256(&seed_bytes).into();
         if hash != round.commitment {
             return Err(Error::CommitmentMismatch);
         }
@@ -557,7 +557,7 @@ mod test {
     use super::*;
     use soroban_sdk::{
         testutils::{Address as _, Ledger},
-        token::{Client as TokenClient, StellarAssetClient},
+        token::StellarAssetClient,
         Address, BytesN, Env,
     };
 
@@ -572,7 +572,7 @@ mod test {
         let tok_id = env.register_stellar_asset_contract_v2(admin.clone());
         let tok_addr = tok_id.address();
 
-        let contract_id = env.register(VrfLottery, ());
+        let contract_id = env.register_contract(None, VrfLottery);
         let client = VrfLotteryClient::new(&env, &contract_id);
         client.initialize(&admin, &treasury, &tok_addr);
 
@@ -624,7 +624,7 @@ mod test {
 
         // Commit hash of seed
         let seed_bytes: Bytes = seed.clone().into();
-        let commitment: BytesN<32> = env.crypto().sha256(&seed_bytes);
+        let commitment: BytesN<32> = env.crypto().sha256(&seed_bytes).into();
         client.commit_seed(&admin, &1, &commitment);
 
         // Advance ledger past end_ledger
@@ -653,7 +653,7 @@ mod test {
         let seed_arr = [2u8; 32];
         let seed: BytesN<32> = BytesN::from_array(&env, &seed_arr);
         let seed_bytes: Bytes = seed.clone().into();
-        let commitment: BytesN<32> = env.crypto().sha256(&seed_bytes);
+        let commitment: BytesN<32> = env.crypto().sha256(&seed_bytes).into();
         client.commit_seed(&admin, &1, &commitment);
 
         env.ledger().with_mut(|l| {

@@ -165,7 +165,7 @@ impl OptionsVault {
             .storage()
             .instance()
             .get(&ORACLE_KEY)
-            .unwrap_or_else(|| Address::generate(&env));
+            .ok_or(Error::NotInitialized)?;
         if caller != oracle {
             return Err(Error::Unauthorized);
         }
@@ -218,7 +218,7 @@ impl OptionsVault {
             .storage()
             .instance()
             .get(&ORACLE_KEY)
-            .unwrap_or_else(|| Address::generate(&env));
+            .ok_or(Error::NotInitialized)?;
         if caller != oracle {
             return Err(Error::Unauthorized);
         }

@@ -9,6 +9,7 @@
 
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, Address, BytesN, Env,
+    Symbol, Vec,
 };
 
 const ROOT_KEY: Symbol = symbol_short!("ROOT");
@@ -120,7 +121,7 @@ impl SparseMerkleRegistry {
             return Err(Error::ProofTooShort);
         }
 
-        let current = Self::hash_leaf_ref(&env, key, value);
+        let current = Self::hash_leaf_ref(&env, key.clone(), value);
         let key_arr = key.to_array();
 
         let mut cur = current;
@@ -199,7 +200,7 @@ impl SparseMerkleRegistry {
             .storage()
             .instance()
             .get(&ADMIN_KEY)
-            .unwrap_or_else(|| Address::generate(&env));
+            .ok_or(Error::NotInitialized)?;
         if caller != admin {
             return Err(Error::Unauthorized);
         }
@@ -217,8 +218,8 @@ impl SparseMerkleRegistry {
         }
 
         let key_arr = key.to_array();
-        let old_leaf = Self::hash_leaf_ref(&env, key, old_value);
-        let new_leaf = Self::hash_leaf_ref(&env, key, new_value);
+        let old_leaf = Self::hash_leaf_ref(&env, key.clone(), old_value);
+        let new_leaf = Self::hash_leaf_ref(&env, key.clone(), new_value);
 
         // Walk old_root with old_leaf.
         let mut cur = old_leaf;

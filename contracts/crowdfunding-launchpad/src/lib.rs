@@ -32,8 +32,7 @@
 mod test;
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, vec, Address, Env, Map,
-    Symbol, Vec,
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Map, Symbol,
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -158,40 +157,12 @@ impl CrowdfundingLaunchpad {
     /// Initialize the launchpad campaign.
     ///
     /// Must be called once before any other function.
-    pub fn initialize(
-        env: Env,
-        admin: Address,
-        sale_token: Address,
-        payment_token: Address,
-        soft_cap: i128,
-        hard_cap: i128,
-        base_price: i128,
-        price_step: i128,
-        price_increment: i128,
-        wl_start_ledger: u32,
-        public_start_ledger: u32,
-        deadline_ledger: u32,
-        cooldown_ledgers: u32,
-    ) -> Result<(), Error> {
+    pub fn initialize(env: Env, config: Config) -> Result<(), Error> {
         if env.storage().instance().has(&KEY_CONFIG) {
             return Err(Error::AlreadyInitialized);
         }
-        admin.require_auth();
+        config.admin.require_auth();
 
-        let config = Config {
-            admin,
-            sale_token,
-            payment_token,
-            soft_cap,
-            hard_cap,
-            base_price,
-            price_step,
-            price_increment,
-            wl_start_ledger,
-            public_start_ledger,
-            deadline_ledger,
-            cooldown_ledgers,
-        };
         let state = State {
             phase: Phase::Whitelist,
             total_raised: 0,

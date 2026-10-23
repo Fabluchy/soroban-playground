@@ -157,7 +157,7 @@ impl StellarNamingService {
             .storage()
             .instance()
             .get(&ADMIN_KEY)
-            .unwrap_or_else(|| Address::generate(env));
+            .expect("admin not initialized");
         let reg_fee = env.storage().instance().get(&REG_FEE_KEY).unwrap_or(1000);
         let ren_fee = env.storage().instance().get(&RENEW_FEE_KEY).unwrap_or(500);
         let grace = env.storage().instance().get(&GRACE_KEY).unwrap_or(1000) as u32;
@@ -181,12 +181,12 @@ impl StellarNamingService {
         Self::ensure_initialized(&env)?;
         caller.require_auth();
 
-        let key = DataKey::Domain(domain);
+        let key = DataKey::Domain(domain.clone());
         if env.storage().persistent().has(&key) {
             return Err(Error::DomainAlreadyExists);
         }
 
-        let (_admin, reg_fee, _renew, grace, _min) = Self::config(&env);
+        let (_admin, reg_fee, _renew, grace) = Self::config(&env);
         let _ = reg_fee;
         let now = env.ledger().timestamp();
         let expiry = now + 365 * 24 * 3600; // 1 year
@@ -208,12 +208,12 @@ impl StellarNamingService {
             let (admin, _, _, _) = Self::config(&env);
             let auction = AuctionState {
                 id: auction_id,
-                domain,
+                domain: domain.clone(),
                 seller: caller.clone(),
-                end_ledger: env.ledger().sequence() + grace as u64,
+                end_ledger: u64::from(env.ledger().sequence()) + grace as u64,
                 status: AuctionStatus::Open,
                 highest_bid: 0,
-                highest_bidder: Address::generate(&env),
+                highest_bidder: caller.clone(),
                 second_highest_bid: 0,
                 commitments: Map::new(&env),
                 revealed: Map::new(&env),
@@ -262,7 +262,7 @@ impl StellarNamingService {
         Self::ensure_initialized(&env)?;
         caller.require_auth();
 
-        let key = DataKey::Domain(domain);
+        let key = DataKey::Domain(domain.clone());
         let mut rec: DomainRecord = env
             .storage()
             .persistent()
@@ -275,7 +275,7 @@ impl StellarNamingService {
             return Err(Error::DomainExpired);
         }
 
-        let (_a, _r, ren_fee, grace, _m) = Self::config(&env);
+        let (_a, _r, ren_fee, grace) = Self::config(&env);
         let _ = (ren_fee, grace);
         rec.expiry = env.ledger().timestamp() + 365 * 24 * 3600;
         env.storage().persistent().set(&key, &rec);
@@ -300,7 +300,7 @@ impl StellarNamingService {
         Self::ensure_initialized(&env)?;
         caller.require_auth();
 
-        let key = DataKey::Domain(domain);
+        let key = DataKey::Domain(domain.clone());
         let mut rec: DomainRecord = env
             .storage()
             .persistent()
@@ -311,7 +311,13 @@ impl StellarNamingService {
         }
 
         let mut records = rec.records;
-        records.set(name.clone(), RecordEntry { kind, value });
+        records.set(
+            name.clone(),
+            RecordEntry {
+                kind: kind.clone(),
+                value,
+            },
+        );
         rec.records = records;
         env.storage().persistent().set(&key, &rec);
 
@@ -397,7 +403,7 @@ impl StellarNamingService {
         Self::ensure_initialized(&env)?;
         caller.require_auth();
 
-        let pkey = DataKey::Domain(parent);
+        let pkey = DataKey::Domain(parent.clone());
         let mut prec: DomainRecord = env
             .storage()
             .persistent()
@@ -421,7 +427,7 @@ impl StellarNamingService {
         env.storage().persistent().set(
             &skey,
             &DomainRecord {
-                owner: sub_owner,
+                owner: sub_owner.clone(),
                 expiry,
                 records: Map::new(&env),
                 subdomains: Vec::new(&env),
@@ -457,7 +463,7 @@ impl StellarNamingService {
         if auc.status != AuctionStatus::Open {
             return Err(Error::AuctionNotOpen);
         }
-        if env.ledger().sequence() > auc.end_ledger {
+        if u64::from(env.ledger().sequence()) > auc.end_ledger {
             return Err(Error::AuctionNotOpen);
         }
 
@@ -497,7 +503,7 @@ impl StellarNamingService {
             .commitments
             .get(bidder.clone())
             .ok_or(Error::InvalidBid)?;
-        let computed = Self::hash_bid(env, amount, secret.clone());
+        let computed = Self::hash_bid(&env, amount, secret.clone());
         if computed != commitment {
             return Err(Error::InvalidSecret);
         }
@@ -535,7 +541,7 @@ impl StellarNamingService {
         if auc.status == AuctionStatus::Finalized {
             return Err(Error::AuctionAlreadyFinalized);
         }
-        if env.ledger().sequence() <= auc.end_ledger {
+        if u64::from(env.ledger().sequence()) <= auc.end_ledger {
             return Err(Error::AuctionNotOpen);
         }
 
@@ -583,7 +589,7 @@ impl StellarNamingService {
 
     // ── Internal ────────────────────────────────────────────────────────────
 
-    fn hash_bytes(env: &Env, data: &[u8]) -> [u8; 32] {
+    fn hash_bytes(_env: &Env, data: &[u8]) -> [u8; 32] {
         let mut out = [0u8; 32];
         let mut acc: u32 = 0x811c9dc5;
         for (i, b) in data.iter().enumerate() {
@@ -598,13 +604,13 @@ impl StellarNamingService {
         out
     }
 
-    fn hash_bid(env: Env, amount: i128, secret: BytesN<32>) -> BytesN<32> {
+    fn hash_bid(env: &Env, amount: i128, secret: BytesN<32>) -> BytesN<32> {
         let amount_bytes = amount.to_le_bytes();
         let mut buf = [0u8; 64];
         buf[..16].copy_from_slice(&amount_bytes);
-        buf[16..].copy_from_slice(secret.as_slice());
-        let digest = Self::hash_bytes(&env, &buf);
-        BytesN::from_array(&env, &digest)
+        buf[16..].copy_from_slice(&secret.to_array());
+        let digest = Self::hash_bytes(env, &buf);
+        BytesN::from_array(env, &digest)
     }
 }
 

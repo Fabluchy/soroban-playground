@@ -22,7 +22,8 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Vec,
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Symbol,
+    Vec,
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -447,7 +448,7 @@ impl MicroLending {
         env.storage().instance().set(&DataKey::Loan(loan_id), &loan);
 
         env.events().publish(
-            (symbol_short!("installment"),),
+            (Symbol::new(&env, "installment"),),
             (
                 borrower,
                 loan_id,

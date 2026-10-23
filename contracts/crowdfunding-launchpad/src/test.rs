@@ -22,22 +22,21 @@ fn setup() -> (Env, Address, Address, Address, Address) {
 fn init_contract(env: &Env, admin: &Address, sale: &Address, pay: &Address) -> Address {
     let contract = env.register_contract(None, CrowdfundingLaunchpad);
     let client = CrowdfundingLaunchpadClient::new(env, &contract);
-    client
-        .initialize(
-            admin,
-            sale,
-            pay,
-            &5_000_000,  // soft_cap
-            &20_000_000, // hard_cap
-            &1_000_000,  // base_price (1 token = 1_000_000 units)
-            &1_000_000,  // price_step
-            &10_000,     // price_increment
-            &10,         // wl_start_ledger
-            &20,         // public_start_ledger
-            &200,        // deadline_ledger
-            &5,          // cooldown_ledgers
-        )
-        .unwrap();
+    let config = Config {
+        admin: admin.clone(),
+        sale_token: sale.clone(),
+        payment_token: pay.clone(),
+        soft_cap: 5_000_000,
+        hard_cap: 20_000_000,
+        base_price: 1_000_000,
+        price_step: 1_000_000,
+        price_increment: 10_000,
+        wl_start_ledger: 10,
+        public_start_ledger: 20,
+        deadline_ledger: 200,
+        cooldown_ledgers: 5,
+    };
+    client.initialize(&config);
     contract
 }
 
@@ -47,12 +46,12 @@ fn test_initialize_and_config() {
     let contract = init_contract(&env, &admin, &sale, &pay);
     let client = CrowdfundingLaunchpadClient::new(&env, &contract);
 
-    let config = client.get_config().unwrap();
+    let config = client.get_config();
     assert_eq!(config.soft_cap, 5_000_000);
     assert_eq!(config.hard_cap, 20_000_000);
     assert_eq!(config.base_price, 1_000_000);
 
-    let state = client.get_state().unwrap();
+    let state = client.get_state();
     assert_eq!(state.phase, Phase::Whitelist);
     assert_eq!(state.total_raised, 0);
 }
@@ -63,20 +62,20 @@ fn test_double_initialize_fails() {
     let contract = init_contract(&env, &admin, &sale, &pay);
     let client = CrowdfundingLaunchpadClient::new(&env, &contract);
 
-    let result = client.try_initialize(
-        &admin,
-        &sale,
-        &pay,
-        &5_000_000,
-        &20_000_000,
-        &1_000_000,
-        &1_000_000,
-        &10_000,
-        &10,
-        &20,
-        &200,
-        &5,
-    );
+    let result = client.try_initialize(&Config {
+        admin: admin.clone(),
+        sale_token: sale.clone(),
+        payment_token: pay.clone(),
+        soft_cap: 5_000_000,
+        hard_cap: 20_000_000,
+        base_price: 1_000_000,
+        price_step: 1_000_000,
+        price_increment: 10_000,
+        wl_start_ledger: 10,
+        public_start_ledger: 20,
+        deadline_ledger: 200,
+        cooldown_ledgers: 5,
+    });
     assert_eq!(result, Err(Ok(Error::AlreadyInitialized)));
 }
 
@@ -98,11 +97,11 @@ fn test_whitelist_gate() {
     assert_eq!(result, Err(Ok(Error::NotWhitelisted)));
 
     // Whitelist the contributor
-    client.set_whitelist(&admin, &contributor, &true).unwrap();
+    client.set_whitelist(&admin, &contributor, &true);
     assert!(client.is_whitelisted(&contributor));
 
     // Now contribution should succeed
-    let tokens = client.contribute(&contributor, &100_000).unwrap();
+    let tokens = client.contribute(&contributor, &100_000);
     assert!(tokens > 0);
     assert_eq!(client.get_contribution(&contributor), 100_000);
 }
@@ -114,14 +113,14 @@ fn test_anti_bot_cooldown() {
     let client = CrowdfundingLaunchpadClient::new(&env, &contract);
 
     // Whitelist and advance to WL open
-    client.set_whitelist(&admin, &contributor, &true).unwrap();
+    client.set_whitelist(&admin, &contributor, &true);
     env.ledger().set(LedgerInfo {
         sequence_number: 15,
         timestamp: 1_000,
         ..env.ledger().get()
     });
 
-    client.contribute(&contributor, &10_000).unwrap();
+    client.contribute(&contributor, &10_000);
 
     // Second immediate purchase blocked by cooldown (ledger 16 < 15+5=20)
     env.ledger().set(LedgerInfo {
@@ -138,7 +137,7 @@ fn test_anti_bot_cooldown() {
         timestamp: 2_000,
         ..env.ledger().get()
     });
-    client.contribute(&contributor, &10_000).unwrap();
+    client.contribute(&contributor, &10_000);
 }
 
 #[test]
@@ -159,7 +158,7 @@ fn test_allocation_cap_enforced() {
     assert_eq!(result, Err(Ok(Error::AllocationCapExceeded)));
 
     // Within cap succeeds
-    client.contribute(&contributor, &500_000).unwrap();
+    client.contribute(&contributor, &500_000);
 }
 
 #[test]
@@ -177,10 +176,10 @@ fn test_successful_campaign_finalization() {
     // 5 contributors × 1_000_000 = 5_000_000 = soft_cap
     for _ in 0..5 {
         let c = Address::generate(&env);
-        client.contribute(&c, &1_000_000).unwrap();
+        client.contribute(&c, &1_000_000);
     }
 
-    let state = client.get_state().unwrap();
+    let state = client.get_state();
     assert_eq!(state.phase, Phase::LiquiditySeed);
 
     // Admin finalizes after deadline
@@ -189,7 +188,7 @@ fn test_successful_campaign_finalization() {
         timestamp: 20_000,
         ..env.ledger().get()
     });
-    let phase = client.finalize(&admin).unwrap();
+    let phase = client.finalize(&admin);
     assert_eq!(phase, Phase::Finalized);
 }
 
@@ -205,7 +204,7 @@ fn test_refund_on_soft_cap_failure() {
         timestamp: 2_000,
         ..env.ledger().get()
     });
-    client.contribute(&contributor, &100_000).unwrap();
+    client.contribute(&contributor, &100_000);
     assert_eq!(client.get_contribution(&contributor), 100_000);
 
     // Soft-cap not reached; finalize after deadline → Refunding
@@ -214,11 +213,11 @@ fn test_refund_on_soft_cap_failure() {
         timestamp: 20_000,
         ..env.ledger().get()
     });
-    let phase = client.finalize(&admin).unwrap();
+    let phase = client.finalize(&admin);
     assert_eq!(phase, Phase::Refunding);
 
     // Refund returns exact amount
-    let refunded = client.refund(&contributor).unwrap();
+    let refunded = client.refund(&contributor);
     assert_eq!(refunded, 100_000);
 
     // Second refund attempt fails (already zeroed)
@@ -240,7 +239,7 @@ fn test_refund_rejected_when_soft_cap_met() {
     // Reach soft cap
     for _ in 0..5 {
         let c = Address::generate(&env);
-        client.contribute(&c, &1_000_000).unwrap();
+        client.contribute(&c, &1_000_000);
     }
 
     env.ledger().set(LedgerInfo {
@@ -248,7 +247,7 @@ fn test_refund_rejected_when_soft_cap_met() {
         timestamp: 20_000,
         ..env.ledger().get()
     });
-    client.finalize(&admin).unwrap();
+    client.finalize(&admin);
 
     // Contributor who contributed tries to refund → soft cap was met
     let late_c = Address::generate(&env);
@@ -262,7 +261,7 @@ fn test_dynamic_price_view() {
     let contract = init_contract(&env, &admin, &sale, &pay);
     let client = CrowdfundingLaunchpadClient::new(&env, &contract);
 
-    let price = client.current_price_view().unwrap();
+    let price = client.current_price_view();
     // Initial price = base_price = 1_000_000
     assert_eq!(price, 1_000_000);
 }

@@ -97,7 +97,7 @@ impl NFTRental {
     pub fn user_of(env: Env, token_id: u64) -> Address {
         let nft = match get_nft(&env, token_id) {
             Ok(n) => n,
-            Err(_) => return Address::generate(&env),
+            Err(_) => return env.current_contract_address(),
         };
 
         let current_ledger = env.ledger().sequence();

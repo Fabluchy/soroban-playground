@@ -39,7 +39,10 @@
 //! in-memory walk: one token transfer in, O(nodes) arithmetic, O(leaves)
 //! storage writes. Depth never multiplies storage accesses.
 
-use soroban_sdk::{contract, contracterror, contractimpl, symbol_short, token, Address, Env, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env, Symbol,
+    Vec,
+};
 
 /// Basis points representing 100% of a node's allocation.
 pub const BPS_DENOMINATOR: u32 = 10_000;
@@ -187,6 +190,7 @@ impl RoyaltySplitter {
             .ok_or(Error::NoTree)?;
 
         token::Client::new(&env, &token).transfer_from(
+            &env.current_contract_address(),
             &payer,
             &env.current_contract_address(),
             &amount,
@@ -203,7 +207,7 @@ impl RoyaltySplitter {
         }
 
         env.events()
-            .publish((symbol_short!("distribute"), token), (payer, amount));
+            .publish((Symbol::new(&env, "distribute"), token), (payer, amount));
 
         Ok(())
     }
