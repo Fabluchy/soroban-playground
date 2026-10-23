@@ -177,7 +177,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-          targets: wasm32v1-none
+          targets: wasm32-unknown-unknown
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
@@ -192,7 +192,7 @@ jobs:
         run: cargo test --all-targets --all-features
 
       - name: Build optimized WASM artifacts
-        run: cargo build --release --target wasm32v1-none --workspace --exclude soroban-playground-indexer --exclude soroban-indexer --exclude zk-verifier --exclude testing-framework --exclude property-testing
+        run: cargo build --release --target wasm32-unknown-unknown --workspace --exclude soroban-playground-indexer --exclude soroban-indexer --exclude zk-verifier --exclude testing-framework --exclude property-testing
 
       - name: Enforce 64KB WASM size limit
         run: |
@@ -200,7 +200,7 @@ jobs:
           MAX_BYTES=65536
           fail=0
           shopt -s nullglob
-          for wasm in target/wasm32v1-none/release/*.wasm; do
+          for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             size=$(stat -c%s "$wasm")
             echo "$wasm: $size bytes"
             if [ "$size" -gt "$MAX_BYTES" ]; then
