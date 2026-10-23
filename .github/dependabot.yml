@@ -4,41 +4,13 @@ updates:
     directory: "/backend"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 10
-    labels:
-      - "dependencies"
-  - package-ecosystem: "npm"
-    directory: "/frontend"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 10
-    groups:
-      react-framework:
-        patterns:
-          - "react"
-          - "react-dom"
-          - "@types/react"
-          - "@types/react-dom"
-    labels:
-      - "dependencies"
-  - package-ecosystem: "npm"
-    directory: "/backend"
-    schedule:
-      interval: "daily"
-    security-updates-only: true
-    open-pull-requests-limit: 10
-    groups:
-      backend-security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
+    open-pull-requests-limit: 0
     labels:
       - "security"
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "daily"
-    security-updates-only: true
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels:
       - "security"
