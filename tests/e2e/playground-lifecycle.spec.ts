@@ -45,6 +45,7 @@ async function stubApi(page: Page, options: { compileFails?: boolean } = {}) {
   const calls = {
     compile: 0,
     deploy: 0,
+    preflight: 0,
     invoke: 0,
     lastCompileBody: null as { code?: string } | null,
   };
@@ -79,6 +80,30 @@ async function stubApi(page: Page, options: { compileFails?: boolean } = {}) {
           sizeBytes: 6144,
           createdAt: new Date().toISOString(),
         },
+      }),
+    });
+  });
+
+  await page.route("**/api/deploy/preflight", async (route) => {
+    calls.preflight += 1;
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ready: true,
+        sourceAccount: "deploy",
+        deployer: "GTEST",
+        contractId: CONTRACT_ID,
+        wasmHash: "a".repeat(64),
+        codeStatus: "live",
+        checkedAt: Date.now(),
+        elapsedMs: 10,
+        funding: {
+          reserveStroops: "10000000",
+          availableStroops: "100000000",
+          feeStroops: "100",
+        },
+        checks: [{ id: "network", label: "Network verified", passed: true }],
+        warnings: [],
       }),
     });
   });
@@ -158,17 +183,22 @@ async function stubApi(page: Page, options: { compileFails?: boolean } = {}) {
 
 /** Wait for Monaco to finish its lazy load and the diff view to settle. */
 async function waitForEditor(page: Page) {
-  await expect(page.getByTestId("monaco-editor").first()).toBeVisible({ timeout: 60_000 });
-  await page.locator(".monaco-editor .view-lines").first().waitFor({ timeout: 60_000 });
+  await expect(page.getByTestId("monaco-editor").first()).toBeVisible({
+    timeout: 60_000,
+  });
+  await page
+    .locator(".monaco-editor .view-lines")
+    .first()
+    .waitFor({ timeout: 60_000 });
 }
 
 /** Replace the whole editor buffer via the keyboard, which is the only path
  *  that does not depend on `window.monaco` being exposed. */
 async function setEditorSource(page: Page, source: string) {
   await waitForEditor(page);
-  await page.getByTestId("monaco-editor").first().click();
-  await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.press("Delete");
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("Control+a");
+  await page.keyboard.press("Backspace");
   await page.keyboard.insertText(source);
 }
 
@@ -177,22 +207,27 @@ test.describe("playground lifecycle", () => {
     // Monaco and the WASM toolchain both need a relaxed CSP; the shipped CSP is
     // asserted separately in the unit suite.
     await page.addInitScript(() => {
-      (window as unknown as { __CSP_RELAXED__?: boolean }).__CSP_RELAXED__ = true;
+      (window as unknown as { __CSP_RELAXED__?: boolean }).__CSP_RELAXED__ =
+        true;
       try {
         window.sessionStorage.setItem("render_warning_seen", "true");
         window.localStorage.setItem(
           "soroban.playground.onboarding.v1",
-          JSON.stringify({ completed: true, dismissed: true, step: 0 })
+          JSON.stringify({ completed: true, dismissed: true, step: 0 }),
         );
       } catch {}
     });
   });
 
-  test("loads a template from the gallery into the editor", async ({ page }) => {
+  test("loads a template from the gallery into the editor", async ({
+    page,
+  }) => {
     await stubApi(page);
 
     await page.goto(`${FRONTEND_URL}/template-library`);
-    await expect(page.getByRole("heading", { name: "Template Library" }).first()).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: "Template Library" }).first(),
+    ).toBeVisible({
       timeout: 60_000,
     });
 
@@ -207,7 +242,9 @@ test.describe("playground lifecycle", () => {
 
     // The template's own source, not the editor default.
     await waitForEditor(page);
-    await expect(page.locator(".monaco-editor .view-lines").first()).toContainText("HelloContract");
+    await expect(
+      page.locator(".monaco-editor .view-lines").first(),
+    ).toContainText("HelloContract");
   });
 
   test("ignores an unknown template id and keeps the default contract", async ({
@@ -219,7 +256,9 @@ test.describe("playground lifecycle", () => {
     await waitForEditor(page);
 
     await expect(page.getByTestId("loaded-template")).toHaveCount(0);
-    await expect(page.locator(".monaco-editor .view-lines").first()).toContainText("HelloContract");
+    await expect(
+      page.locator(".monaco-editor .view-lines").first(),
+    ).toContainText("HelloContract");
   });
 
   test("compiles, deploys and reads state end to end", async ({ page }) => {
@@ -229,21 +268,36 @@ test.describe("playground lifecycle", () => {
     await setEditorSource(page, EDITED_CONTRACT);
 
     // --- compile ---------------------------------------------------------
-    const compileButton = page.getByRole("button", { name: "Compile", exact: true });
+    const compileButton = page.getByRole("button", {
+      name: "Compile",
+      exact: true,
+    });
     await expect(compileButton).toBeEnabled();
     await compileButton.click();
 
-    await expect(page.getByText(/Compiled successfully/).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Compiled successfully/).first()).toBeVisible({
+      timeout: 30_000,
+    });
     expect(calls.compile).toBe(1);
     expect(calls.lastCompileBody?.code).toContain("CounterContract");
 
     // Deploy stays locked until a successful compile.
-    const deployButton = page.getByRole("button", { name: "Deploy to Testnet" });
-    await expect(deployButton).toBeEnabled({ timeout: 15_000 });
+    const deployButton = page.getByRole("button", { name: /^Deploy to / });
+    await expect(deployButton).toHaveAttribute("aria-disabled", "true");
+    await page
+      .getByRole("button", { name: "Generate salt", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Run pre-flight checks", exact: true })
+      .click();
+    await expect(deployButton).toHaveAttribute("aria-disabled", "false");
+    expect(calls.preflight).toBe(1);
 
     // --- deploy ----------------------------------------------------------
     await deployButton.click();
-    await expect(page.getByText("Active Contract ID").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Active Contract ID").first()).toBeVisible({
+      timeout: 30_000,
+    });
     await expect(page.getByText(CONTRACT_ID).first()).toBeVisible();
     expect(calls.deploy).toBe(1);
 
@@ -256,7 +310,9 @@ test.describe("playground lifecycle", () => {
     await expect(storagePanel).toContainText("Contract Storage");
   });
 
-  test("surfaces a compile failure and keeps deploy locked", async ({ page }) => {
+  test("surfaces a compile failure and keeps deploy locked", async ({
+    page,
+  }) => {
     const calls = await stubApi(page, { compileFails: true });
 
     await page.goto(`${FRONTEND_URL}/playground`);
@@ -264,14 +320,16 @@ test.describe("playground lifecycle", () => {
 
     await page.getByRole("button", { name: "Compile", exact: true }).click();
 
-    await expect(page.getByText(/expected `env` parameter/).first()).toBeVisible({
+    await expect(
+      page.getByText(/expected `env` parameter/).first(),
+    ).toBeVisible({
       timeout: 30_000,
     });
     expect(calls.compile).toBe(1);
 
     // A failed build must not unlock deployment.
     await expect(
-      page.getByRole("button", { name: "Deploy to Testnet" }),
+      page.getByRole("button", { name: /^Deploy to / }),
     ).toBeDisabled();
     expect(calls.deploy).toBe(0);
   });
@@ -283,10 +341,20 @@ test.describe("playground lifecycle", () => {
     await setEditorSource(page, EDITED_CONTRACT);
 
     await page.getByRole("button", { name: "Compile", exact: true }).click();
-    await expect(page.getByText(/Compiled successfully/).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Compiled successfully/).first()).toBeVisible({
+      timeout: 30_000,
+    });
 
-    await page.getByRole("button", { name: "Deploy to Testnet" }).click();
-    await expect(page.getByText(CONTRACT_ID).first()).toBeVisible({ timeout: 30_000 });
+    await page
+      .getByRole("button", { name: "Generate salt", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Run pre-flight checks", exact: true })
+      .click();
+    await page.getByRole("button", { name: /^Deploy to / }).click();
+    await expect(page.getByText(CONTRACT_ID).first()).toBeVisible({
+      timeout: 30_000,
+    });
 
     const invokeButton = page.getByRole("button", { name: "Invoke Function" });
     await expect(invokeButton).toBeEnabled({ timeout: 15_000 });

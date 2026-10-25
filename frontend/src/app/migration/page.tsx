@@ -58,6 +58,7 @@ export default function MigrationAssistant() {
               Legacy v1 Request (CURL)
             </label>
             <textarea
+              aria-label="Legacy v1 Request (CURL)"
               value={v1Curl}
               onChange={(e) => setV1Curl(e.target.value)}
               className="w-full h-48 bg-gray-900 border border-gray-800 rounded-2xl p-4 font-mono text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all"
@@ -67,6 +68,7 @@ export default function MigrationAssistant() {
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden md:block">
             <button
               onClick={handleTransform}
+              aria-label="Transform v1 request to v2"
               className="bg-primary-500 hover:bg-primary-400 text-white p-4 rounded-full shadow-2xl shadow-primary-500/20 transition-transform active:scale-95 group"
             >
               <Zap className="w-8 h-8 group-hover:animate-pulse" />
@@ -81,6 +83,7 @@ export default function MigrationAssistant() {
             </label>
             <div className="relative">
               <textarea
+                aria-label="Modern v2 Request (CURL)"
                 readOnly
                 value={v2Curl || "Click the lightning bolt to transform..."}
                 className="w-full h-48 bg-gray-900/50 border border-emerald-500/30 rounded-2xl p-4 font-mono text-sm text-emerald-400 outline-none"
@@ -105,6 +108,7 @@ export default function MigrationAssistant() {
         <div className="md:hidden flex justify-center">
           <button
             onClick={handleTransform}
+            aria-label="Transform v1 request to v2"
             className="flex items-center gap-2 bg-primary-500 hover:bg-primary-400 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-primary-500/20"
           >
             <Zap className="w-5 h-5" /> Transform Command
@@ -113,16 +117,16 @@ export default function MigrationAssistant() {
 
         {/* Visual Diff Section */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8 space-y-8">
-          <h3 className="text-2xl font-bold flex items-center gap-3">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
             <Split className="text-primary-500 w-6 h-6" />
             Breaking Changes Comparison
-          </h3>
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="space-y-6">
-              <h4 className="text-sm font-bold text-gray-500 uppercase">
+              <h3 className="text-sm font-bold text-gray-500 uppercase">
                 Field Renaming (Request)
-              </h4>
+              </h3>
               <div className="space-y-3">
                 {[
                   { from: "contractId", to: "contract_id" },
@@ -130,7 +134,7 @@ export default function MigrationAssistant() {
                   { from: "functionName", to: "function_name" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4 group">
-                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-lg font-mono text-xs line-through opacity-60">
+                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-lg font-mono text-xs line-through">
                       {item.from}
                     </span>
                     <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-primary-500 transition-colors" />
@@ -143,9 +147,9 @@ export default function MigrationAssistant() {
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-sm font-bold text-gray-500 uppercase">
+              <h3 className="text-sm font-bold text-gray-500 uppercase">
                 Field Renaming (Response)
-              </h4>
+              </h3>
               <div className="space-y-3">
                 {[
                   { from: "durationMs", to: "duration_ms" },
@@ -153,7 +157,7 @@ export default function MigrationAssistant() {
                   { from: "sizeBytes", to: "size_bytes" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4 group">
-                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-lg font-mono text-xs line-through opacity-60">
+                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-lg font-mono text-xs line-through">
                       {item.from}
                     </span>
                     <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-primary-500 transition-colors" />

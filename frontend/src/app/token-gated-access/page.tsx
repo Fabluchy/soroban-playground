@@ -21,7 +21,7 @@ export default function TokenGatedAccessPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-950 p-8 text-slate-100 selection:bg-violet-500/30">
+    <section className="min-h-screen bg-slate-950 p-8 text-slate-100 selection:bg-violet-500/30">
       <div className="mx-auto max-w-7xl space-y-8">
         {/* Breadcrumbs */}
         <nav
@@ -81,6 +81,6 @@ export default function TokenGatedAccessPage() {
         {/* Panel */}
         <TokenGatedAccessPanel apiBase={apiBase} />
       </div>
-    </main>
+    </section>
   );
 }

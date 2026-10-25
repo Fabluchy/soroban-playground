@@ -122,12 +122,19 @@ export class FaucetService {
     return isValid;
   }
 
-  public checkRateLimit(ip: string, account: string): { allowed: boolean; reason?: string } {
+  public checkRateLimit(
+    ip: string,
+    account: string
+  ): { allowed: boolean; reason?: string } {
     const now = Date.now();
 
     const existingAccountClaim = this.accountClaims.get(account);
-    if (existingAccountClaim && now - existingAccountClaim.claimedAt < CLAIM_COOLDOWN_MS) {
-      const remainingMs = CLAIM_COOLDOWN_MS - (now - existingAccountClaim.claimedAt);
+    if (
+      existingAccountClaim &&
+      now - existingAccountClaim.claimedAt < CLAIM_COOLDOWN_MS
+    ) {
+      const remainingMs =
+        CLAIM_COOLDOWN_MS - (now - existingAccountClaim.claimedAt);
       const remainingHours = (remainingMs / (1000 * 60 * 60)).toFixed(1);
       return {
         allowed: false,
@@ -136,7 +143,10 @@ export class FaucetService {
     }
 
     const existingIpClaim = this.ipClaims.get(ip);
-    if (existingIpClaim && now - existingIpClaim.claimedAt < CLAIM_COOLDOWN_MS) {
+    if (
+      existingIpClaim &&
+      now - existingIpClaim.claimedAt < CLAIM_COOLDOWN_MS
+    ) {
       const remainingMs = CLAIM_COOLDOWN_MS - (now - existingIpClaim.claimedAt);
       const remainingHours = (remainingMs / (1000 * 60 * 60)).toFixed(1);
       return {
@@ -162,7 +172,9 @@ export class FaucetService {
     onProgress?.('verifying_proof_of_work', { challengeId });
     const powValid = this.verifyPoWProof(challengeId, nonce, ip, account);
     if (!powValid) {
-      throw new Error('Invalid or expired Proof-of-Work challenge. Sybil protection triggered.');
+      throw new Error(
+        'Invalid or expired Proof-of-Work challenge. Sybil protection triggered.'
+      );
     }
     onProgress?.('pow_verified');
 
@@ -174,14 +186,19 @@ export class FaucetService {
 
     // Try allocating hot pool account
     onProgress?.('allocating_faucet_pool');
-    const hotAccount = this.hotPool.find((a) => !a.inUse && a.balanceXlm >= requestedAmount);
+    const hotAccount = this.hotPool.find(
+      (a) => !a.inUse && a.balanceXlm >= requestedAmount
+    );
 
     let result: FaucetFundingResult;
 
     if (hotAccount) {
       hotAccount.inUse = true;
       try {
-        onProgress?.('submitting_transaction', { source: 'hot_pool', from: hotAccount.publicKey });
+        onProgress?.('submitting_transaction', {
+          source: 'hot_pool',
+          from: hotAccount.publicKey,
+        });
         hotAccount.balanceXlm -= requestedAmount;
         const txHash = crypto.randomBytes(32).toString('hex');
 
@@ -201,7 +218,9 @@ export class FaucetService {
       onProgress?.('fallback_to_friendbot', { url: this.friendbotUrl });
       try {
         if (typeof fetch === 'function') {
-          const res = await fetch(`${this.friendbotUrl}?addr=${encodeURIComponent(account)}`);
+          const res = await fetch(
+            `${this.friendbotUrl}?addr=${encodeURIComponent(account)}`
+          );
           if (!res.ok) {
             throw new Error(`Friendbot returned status ${res.status}`);
           }
@@ -215,7 +234,9 @@ export class FaucetService {
           timestamp: new Date().toISOString(),
         };
       } catch (err: any) {
-        throw new Error(`Faucet funding and Friendbot fallback failed: ${err?.message || String(err)}`);
+        throw new Error(
+          `Faucet funding and Friendbot fallback failed: ${err?.message || String(err)}`
+        );
       }
     }
 
@@ -253,15 +274,22 @@ export class FaucetService {
 
 export const faucetService = new FaucetService();
 
-export function createFaucetRouter(service: FaucetService = faucetService): Router {
+export function createFaucetRouter(
+  service: FaucetService = faucetService
+): Router {
   const router = express.Router();
 
   router.post('/challenge', (req: Request, res: Response) => {
-    const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string) ||
+      req.socket.remoteAddress ||
+      '127.0.0.1';
     const { account } = req.body || {};
 
     if (!account) {
-      res.status(400).json({ success: false, error: 'Stellar account address is required' });
+      res
+        .status(400)
+        .json({ success: false, error: 'Stellar account address is required' });
       return;
     }
 
@@ -270,13 +298,17 @@ export function createFaucetRouter(service: FaucetService = faucetService): Rout
   });
 
   router.post('/fund', async (req: Request, res: Response) => {
-    const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string) ||
+      req.socket.remoteAddress ||
+      '127.0.0.1';
     const { account, challengeId, nonce, amountXlm } = req.body || {};
 
     if (!account || !challengeId || nonce === undefined) {
       res.status(400).json({
         success: false,
-        error: 'Missing required parameters: account, challengeId, and nonce are required',
+        error:
+          'Missing required parameters: account, challengeId, and nonce are required',
       });
       return;
     }
@@ -291,7 +323,9 @@ export function createFaucetRouter(service: FaucetService = faucetService): Rout
       });
       res.json({ success: true, ...result });
     } catch (err: any) {
-      res.status(429).json({ success: false, error: err?.message || String(err) });
+      res
+        .status(429)
+        .json({ success: false, error: err?.message || String(err) });
     }
   });
 

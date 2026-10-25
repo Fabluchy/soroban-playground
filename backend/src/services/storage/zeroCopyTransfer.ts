@@ -74,8 +74,7 @@ export class ZeroCopyTransferPipeline {
   constructor(options: TransferOptions = {}) {
     this.chunkSize = options.chunkSize || DEFAULT_CHUNK_SIZE;
     this.timeout = options.timeout || DEFAULT_TIMEOUT;
-    this.useSendfile =
-      options.useSendfile !== false && isSendfileAvailable();
+    this.useSendfile = options.useSendfile !== false && isSendfileAvailable();
     this.useMmap = options.useMmap !== false && isMMAPAvailable();
   }
 
@@ -267,9 +266,7 @@ export class ZeroCopyTransferPipeline {
       progressTransform.on('error', reject);
       destStream.on('error', reject);
 
-      sourceStream
-        .pipe(progressTransform)
-        .pipe(destStream);
+      sourceStream.pipe(progressTransform).pipe(destStream);
 
       destStream.on('finish', () => {
         metrics.method = 'fallback';
@@ -328,7 +325,9 @@ export class ZeroCopyTransferPipeline {
 
       const metrics = await this.transferFile(sourcePath, nullStream);
       const throughputMBps =
-        (metrics.bytesTransferred / 1024 / 1024) /
+        metrics.bytesTransferred /
+        1024 /
+        1024 /
         ((metrics.endTime! - metrics.startTime) / 1000);
       results.push(throughputMBps);
     }
@@ -336,7 +335,11 @@ export class ZeroCopyTransferPipeline {
     const avgThroughput = results.reduce((a, b) => a + b, 0) / results.length;
     return {
       avgThroughput,
-      method: this.useSendfile ? 'sendfile' : this.useMmap ? 'mmap' : 'fallback',
+      method: this.useSendfile
+        ? 'sendfile'
+        : this.useMmap
+          ? 'mmap'
+          : 'fallback',
     };
   }
 
@@ -349,15 +352,11 @@ export class ZeroCopyTransferPipeline {
     avgTransferTime: number;
   } {
     const metrics = Array.from(transferMetricsMap.values());
-    const totalBytes = metrics.reduce(
-      (sum, m) => sum + m.bytesTransferred,
-      0
-    );
+    const totalBytes = metrics.reduce((sum, m) => sum + m.bytesTransferred, 0);
     const avgTime =
       metrics.length > 0
         ? metrics.reduce(
-            (sum, m) =>
-              sum + (m.endTime ? m.endTime - m.startTime : 0),
+            (sum, m) => sum + (m.endTime ? m.endTime - m.startTime : 0),
             0
           ) / metrics.length
         : 0;

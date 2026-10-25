@@ -31,7 +31,9 @@ export class SlowQueryAnalyzerDaemon {
   public startDaemon(): void {
     if (this.isRunning) return;
     this.isRunning = true;
-    console.log('[SlowQueryDaemon] Database analyzer and index rebuilder daemon started.');
+    console.log(
+      '[SlowQueryDaemon] Database analyzer and index rebuilder daemon started.'
+    );
 
     this.runAnalysisCycle().catch((err) =>
       console.error('[SlowQueryDaemon] Error in analysis cycle:', err.message)
@@ -40,7 +42,10 @@ export class SlowQueryAnalyzerDaemon {
     setInterval(() => {
       if (this.isRunning) {
         this.runAnalysisCycle().catch((err) =>
-          console.error('[SlowQueryDaemon] Error in analysis cycle:', err.message)
+          console.error(
+            '[SlowQueryDaemon] Error in analysis cycle:',
+            err.message
+          )
         );
       }
     }, this.pollIntervalMs);
@@ -61,7 +66,8 @@ export class SlowQueryAnalyzerDaemon {
     const client = await this.pool.connect();
     try {
       // 1. Query pg_stat_statements for slow queries (> 200ms mean time)
-      const slowQueryRes = await client.query(`
+      const slowQueryRes = await client.query(
+        `
         SELECT 
           query,
           calls,
@@ -72,14 +78,18 @@ export class SlowQueryAnalyzerDaemon {
         WHERE mean_exec_time > $1
         ORDER BY mean_exec_time DESC
         LIMIT 10;
-      `, [this.slowQueryThresholdMs]);
+      `,
+        [this.slowQueryThresholdMs]
+      );
 
       const slowQueries: SlowQueryRecord[] = slowQueryRes.rows;
 
       // Log alerts for queries causing high latency
       for (const q of slowQueries) {
         if (q.meanTimeMs > 1000) {
-          console.warn(`[SlowQueryAlert] Critical slow query detected (mean: ${q.meanTimeMs.toFixed(2)}ms): ${q.query.substring(0, 100)}...`);
+          console.warn(
+            `[SlowQueryAlert] Critical slow query detected (mean: ${q.meanTimeMs.toFixed(2)}ms): ${q.query.substring(0, 100)}...`
+          );
         }
       }
 
@@ -95,12 +105,14 @@ export class SlowQueryAnalyzerDaemon {
         LIMIT 5;
       `);
 
-      const recommendations: IndexRecommendation[] = seqScanRes.rows.map((row) => ({
-        tableName: row.tableName,
-        columnName: 'id_or_frequent_filter_col',
-        reason: `High sequential scan count (${row.seqScanRes || row.seqScans}) relative to index scans.`,
-        suggestedSql: `CREATE INDEX CONCURRENTLY idx_${row.tableName.replace('.', '_')}_optimized ON ${row.tableName} (frequent_column);`,
-      }));
+      const recommendations: IndexRecommendation[] = seqScanRes.rows.map(
+        (row) => ({
+          tableName: row.tableName,
+          columnName: 'id_or_frequent_filter_col',
+          reason: `High sequential scan count (${row.seqScanRes || row.seqScans}) relative to index scans.`,
+          suggestedSql: `CREATE INDEX CONCURRENTLY idx_${row.tableName.replace('.', '_')}_optimized ON ${row.tableName} (frequent_column);`,
+        })
+      );
 
       return { slowQueries, recommendations };
     } finally {
@@ -114,12 +126,18 @@ export class SlowQueryAnalyzerDaemon {
   public async reindexTableConcurrently(tableName: string): Promise<void> {
     const client = await this.pool.connect();
     try {
-      console.log(`[SlowQueryDaemon] Starting non-blocking REINDEX TABLE CONCURRENTLY for ${tableName}...`);
+      console.log(
+        `[SlowQueryDaemon] Starting non-blocking REINDEX TABLE CONCURRENTLY for ${tableName}...`
+      );
       // Note: REINDEX CONCURRENTLY cannot be executed inside a transaction block
       await client.query(`REINDEX TABLE CONCURRENTLY ${tableName};`);
-      console.log(`[SlowQueryDaemon] Successfully reindexed ${tableName} concurrently.`);
+      console.log(
+        `[SlowQueryDaemon] Successfully reindexed ${tableName} concurrently.`
+      );
     } catch (err: any) {
-      console.error(`[SlowQueryDaemon] Failed to reindex ${tableName}: ${err.message}`);
+      console.error(
+        `[SlowQueryDaemon] Failed to reindex ${tableName}: ${err.message}`
+      );
       throw err;
     } finally {
       client.release();

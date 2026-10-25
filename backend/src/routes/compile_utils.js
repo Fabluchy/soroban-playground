@@ -1,7 +1,7 @@
 // Copyright (c) 2026 StellarDevTools
 // SPDX-License-Identifier: MIT
 
-const BASE_SDK_VERSION = '20.0.0';
+const BASE_SDK_VERSION = '21.7.7';
 const MAX_DEPS = 20;
 
 export function isValidCrateName(name) {

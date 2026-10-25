@@ -1,5 +1,15 @@
 require("@testing-library/jest-dom");
 
+// Polyfill the text encoding globals — JSDOM does not provide them, but the
+// browser does and the Web Crypto API expects them.
+const { TextEncoder, TextDecoder } = require("node:util");
+if (typeof global.TextEncoder === "undefined") {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === "undefined") {
+  global.TextDecoder = TextDecoder;
+}
+
 // Mock fetch globally
 global.fetch = jest.fn();
 

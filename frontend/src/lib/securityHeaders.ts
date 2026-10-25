@@ -71,6 +71,7 @@ export function buildContentSecurityPolicy(nonce?: string): string {
       .filter(Boolean)
       .join(" "),
     "worker-src 'self' blob:",
+    "media-src 'self' blob:",
     "manifest-src 'self'",
     "frame-src 'self'",
     "frame-ancestors 'none'",

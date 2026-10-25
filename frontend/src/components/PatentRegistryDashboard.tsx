@@ -212,9 +212,9 @@ function FilePatentForm({ onSuccess }: { onSuccess: (id: number) => void }) {
 
   return (
     <Card>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <FileText className="w-4 h-4 text-blue-500" /> File New Patent
-      </h3>
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Inventor address"
@@ -295,9 +295,9 @@ function PatentLookup() {
 
   return (
     <Card>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <FileText className="w-4 h-4 text-slate-500" /> Look Up Patent
-      </h3>
+      </h2>
       <div className="flex gap-2">
         <input
           type="number"
@@ -363,9 +363,9 @@ function AdminActions() {
 
   return (
     <Card>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <ShieldCheck className="w-4 h-4 text-purple-500" /> Admin Actions
-      </h3>
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Admin address"
@@ -440,9 +440,9 @@ function GrantLicenseForm() {
 
   return (
     <Card>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <ShieldCheck className="w-4 h-4 text-green-500" /> Grant License
-      </h3>
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
           label="Owner address"
@@ -582,9 +582,9 @@ function DisputePanel() {
 
   return (
     <Card>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <Scale className="w-4 h-4 text-orange-500" /> Disputes
-      </h3>
+      </h2>
       <div className="flex gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
         {tabs.map((t) => (
           <button

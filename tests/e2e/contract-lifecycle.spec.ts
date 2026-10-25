@@ -22,13 +22,14 @@ const BACKEND_URL = process.env.E2E_BACKEND_URL ?? "http://localhost:5000";
 // Minimal compile-only Soroban contract (no external deps) so the backend can
 // build it without network access beyond the Cargo registry.
 const HELLO_CONTRACT = `#![no_std]
-use soroban_sdk::{contractimpl, Env, Symbol};
+use soroban_sdk::{contract, contractimpl, Env, Symbol};
 
+#[contract]
 pub struct HelloContract;
 
 #[contractimpl]
 impl HelloContract {
-    pub fn hello(_env: &Env, to: Symbol) -> Symbol {
+    pub fn hello(_env: Env, to: Symbol) -> Symbol {
         to
     }
 }
@@ -50,7 +51,9 @@ test.describe("contract lifecycle", () => {
 
   test("frontend loads Playground", async ({ page }) => {
     await page.goto(FRONTEND_URL + "/");
-    await expect(page.getByText(/Soroban/i).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Soroban/i).first()).toBeVisible({
+      timeout: 30_000,
+    });
   });
 
   test("backend health is OK", async () => {
@@ -70,7 +73,7 @@ test.describe("contract lifecycle", () => {
     const res = await api.post("/api/compile", {
       timeout: 120_000,
       data: {
-        source: HELLO_CONTRACT,
+        code: HELLO_CONTRACT,
         filename: "hello.rs",
       },
     });
@@ -80,20 +83,11 @@ test.describe("contract lifecycle", () => {
     }
     expect(res.ok()).toBeTruthy();
     const body = (await res.json()) as {
-      ok?: boolean;
-      wasm?: { hash?: string } | null;
-      contractId?: string | null;
-      error?: string;
+      success: boolean;
+      artifact?: { name: string; sizeBytes: number; path?: string };
     };
-    // A successful compile either returns a wasm hash or reports status ok.
-    expect(body.ok || body.wasm || body.error).toBeDefined();
-    if (body.error) {
-      // The compile may be queued/started asynchronously; a started/queued
-      // response without an error is accepted.
-      test.info().annotations.push({
-        type: "backend_shape",
-        description: body.error,
-      });
-    }
+    expect(body.success).toBe(true);
+    expect(body.artifact?.name).toMatch(/\.wasm$/);
+    expect(body.artifact?.sizeBytes).toBeGreaterThan(8);
   });
 });

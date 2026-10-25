@@ -18,6 +18,7 @@ const resolveWorkspacePackage = (name) => {
 
 const config = {
   testEnvironment: "jsdom",
+  testPathIgnorePatterns: ["/node_modules/", "\\.node\\.test\\.ts$"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",

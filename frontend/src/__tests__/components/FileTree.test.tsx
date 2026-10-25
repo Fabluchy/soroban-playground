@@ -243,6 +243,40 @@ describe("FileTree", () => {
   });
 
   // -------------------------------------------------------------------------
+  // Dirty file indicators (issue #1727)
+  // -------------------------------------------------------------------------
+  describe("dirty indicators", () => {
+    it("does not render the marker for a clean file", () => {
+      render(<FileTree nodes={[fileRs]} />);
+      expect(screen.queryByTestId("filetree-dirty")).not.toBeInTheDocument();
+    });
+
+    it("renders the marker for a dirty file", () => {
+      render(<FileTree nodes={[{ ...fileRs, dirty: true }]} />);
+      expect(screen.getByTestId("filetree-dirty")).toBeInTheDocument();
+    });
+
+    it("renders the Git status badge", () => {
+      render(
+        <FileTree nodes={[{ ...fileRs, dirty: true, status: "M" }]} />,
+      );
+      expect(screen.getByTestId("filetree-dirty")).toHaveTextContent("M");
+    });
+
+    it("falls back to the modified badge", () => {
+      render(<FileTree nodes={[{ ...fileRs, dirty: true }]} />);
+      expect(screen.getByTestId("filetree-dirty")).toHaveTextContent("M");
+    });
+
+    it("marks the file with an accessible label", () => {
+      render(<FileTree nodes={[{ ...fileRs, dirty: true }]} />);
+      expect(
+        screen.getByLabelText("Uncommitted changes in lib.rs"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // onSelectFile not provided (no crash)
   // -------------------------------------------------------------------------
   describe("optional callbacks", () => {

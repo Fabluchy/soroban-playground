@@ -9,11 +9,15 @@ node_modules
 **/.nyc_output/
 # Jest test snapshots (auto-generated, should not be committed)
 **/__snapshots__/
+*.snap
 # Soroban test snapshots (auto-generated, not committed)
 test_snapshots/
 **/test_snapshots/
 # proptest regression corpus (auto-generated)
 **/proptest-regressions/
+# Soroban local state directories
+**/.soroban/
+contracts/**/.soroban/
 
 # Next.js
 /.next/
@@ -134,4 +138,23 @@ XXmIXSR9.*
 *.pdb
 *.class
 *.jar
-*.aar"
+*.aar
+
+# Python cache and bytecode (scripts/__pycache__ etc.)
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# Build output text files (generated locally, not for review)
+frontend/lint_output.txt
+frontend/build_out.txt
+backend/npm-install.log
+
+# Playwright test outputs
+playwright-report/
+test-results/
+
+# Cargo incremental build artifacts
+**/incremental/
+**/.cargo-lock

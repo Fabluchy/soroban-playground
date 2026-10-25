@@ -35,9 +35,9 @@ export default function BugBountyDashboard() {
           {/* Metrics Cards */}
           <div className="bg-[#1c1b1c]/80 backdrop-blur-xl border border-white/5 rounded-xl p-6 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0070FF] to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <h3 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
+            <h2 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
               Total Bounties Paid
-            </h3>
+            </h2>
             <p className="font-space-grotesk text-4xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
               $2.4M <span className="text-xl text-[#0070FF]">USDC</span>
             </p>
@@ -45,9 +45,9 @@ export default function BugBountyDashboard() {
 
           <div className="bg-[#1c1b1c]/80 backdrop-blur-xl border border-white/5 rounded-xl p-6 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00FFFF] to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <h3 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
+            <h2 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
               Active Bugs
-            </h3>
+            </h2>
             <p className="font-space-grotesk text-4xl font-bold text-[#00FFFF] drop-shadow-[0_0_15px_rgba(0,255,255,0.3)]">
               156
             </p>
@@ -55,9 +55,9 @@ export default function BugBountyDashboard() {
 
           <div className="bg-[#1c1b1c]/80 backdrop-blur-xl border border-white/5 rounded-xl p-6 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fbfb] to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <h3 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
+            <h2 className="text-[#c2c6d8] text-xs font-semibold tracking-widest uppercase mb-4">
               Resolved
-            </h3>
+            </h2>
             <p className="font-space-grotesk text-4xl font-bold text-white">
               1,204
             </p>

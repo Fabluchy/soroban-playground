@@ -5,7 +5,11 @@
  * Tests for WASM Parser
  */
 
-import WasmParser, { extractSorobanMetadata, validateSorobanExports, validateSorobanImports } from './parser';
+import WasmParser, {
+  extractSorobanMetadata,
+  validateSorobanExports,
+  validateSorobanImports,
+} from './parser';
 
 describe('WasmParser', () => {
   // Create a minimal valid WASM binary
@@ -35,7 +39,9 @@ describe('WasmParser', () => {
   });
 
   test('should reject invalid WASM magic number', () => {
-    const invalid = Buffer.from([0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x00]);
+    const invalid = Buffer.from([
+      0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x00,
+    ]);
     const parser = new WasmParser(invalid);
     const metadata = parser.parse();
 

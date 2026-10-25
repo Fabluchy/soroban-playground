@@ -10,16 +10,19 @@
     "lint": "eslint",
     "test": "node ../node_modules/jest/bin/jest.js --runInBand",
     "test:hooks": "jest src/__tests__/hooks --no-coverage",
-    "test:theme": "node ../node_modules/jest/bin/jest.js --runInBand src/__tests__/theme src/__tests__/components/ThemeSwitcher.test.tsx"
+    "test:theme": "node ../node_modules/jest/bin/jest.js --runInBand src/__tests__/theme src/__tests__/components/ThemeSwitcher.test.tsx",
+    "test:node": "node --experimental-strip-types --test src/__tests__/*/*.node.test.ts",
+    "test:all": "npm test && npm run test:node"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",
     "@creit.tech/stellar-wallets-kit": "^2.7.0",
+    "@kurkle/color": "^0.4.0",
     "@ledgerhq/hw-transport-webhid": "^6.35.4",
     "@ledgerhq/hw-transport-webusb": "^6.29.12",
-    "@kurkle/color": "^0.4.0",
-    "buffer": "^6.0.3",
+    "@octokit/rest": "^20.1.2",
     "@monaco-editor/react": "^4.7.0",
+    "@noble/curves": "^1.8.1",
     "@scalar/rust-fmt": "^0.3.0",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^12.3.0",
@@ -27,6 +30,7 @@
     "@wry/context": "^0.7.4",
     "@wry/equality": "^0.5.7",
     "@wry/trie": "^0.5.0",
+    "buffer": "^6.0.3",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
     "graphql": "^16.13.2",
@@ -44,7 +48,8 @@
     "rxjs": "^7.8.2",
     "ts-invariant": "^0.10.3",
     "vscode-languageserver-protocol": "^3.17.5",
-    "wabt": "^1.0.39"
+    "wabt": "^1.0.39",
+    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

@@ -28,9 +28,18 @@ import {
 // ---------------------------------------------------------------------------
 
 export type MilestoneStatus =
-  "Pending" | "InProgress" | "UnderReview" | "Approved" | "Rejected" | "Paid";
+  | "Pending"
+  | "InProgress"
+  | "UnderReview"
+  | "Approved"
+  | "Rejected"
+  | "Paid";
 export type EscrowStatus =
-  "Pending" | "Active" | "Completed" | "Disputed" | "Cancelled";
+  | "Pending"
+  | "Active"
+  | "Completed"
+  | "Disputed"
+  | "Cancelled";
 
 export interface EscrowMilestone {
   id: number;
@@ -717,6 +726,7 @@ export default function EscrowDashboard({
           )}
           <button
             onClick={refresh}
+            aria-label="Refresh escrow data"
             disabled={isLoading}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           >

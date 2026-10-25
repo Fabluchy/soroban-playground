@@ -19,9 +19,12 @@ jest.mock('monaco-editor', () => {
     onDidChangeModelContent: jest.fn().mockReturnValue(contentListener),
     saveViewState: jest.fn().mockReturnValue({ viewState: {} }),
     restoreViewState: jest.fn(),
+    addAction: jest.fn(),
   };
   return {
     __esModule: true,
+    KeyMod: { CtrlCmd: 2048 },
+    KeyCode: { KeyS: 49 },
     editor: {
       create: jest.fn().mockReturnValue(editor),
       setModelMarkers: jest.fn(),
@@ -34,7 +37,7 @@ jest.mock('monaco-editor', () => {
       registerCompletionItemProvider: jest.fn(),
     },
   };
-});
+}, { virtual: true });
 
 jest.mock('@/hooks/useCollaborativeEditor', () => ({
   useCollaborativeEditor: () => ({ peers: [], isConnected: false }),
@@ -43,7 +46,7 @@ jest.mock('@/hooks/useCollaborativeEditor', () => ({
 jest.mock('@/lib/editorLoadScheduler', () => ({
   scheduleEditorLoad: (cb: () => void) => {
     cb();
-    return undefined;
+    return () => {};
   },
   preloadMonacoEditor: jest.fn(),
 }));

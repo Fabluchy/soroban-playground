@@ -59,7 +59,8 @@ export class DistributedLockManager {
       successCount = results.filter(Boolean).length;
 
       const elapsed = Date.now() - startTime;
-      const validityTime = ttlMs - elapsed - Math.floor(ttlMs * this.options.driftFactor) - 50;
+      const validityTime =
+        ttlMs - elapsed - Math.floor(ttlMs * this.options.driftFactor) - 50;
 
       // Check quorum and validity time
       if (successCount >= this.quorum && validityTime > 0) {
@@ -69,12 +70,15 @@ export class DistributedLockManager {
         await this.releaseLockInstances(resource, val);
 
         if (attempts > this.options.retryCount) {
-          throw new Error(`Failed to acquire distributed lock for resource: "${resource}" after ${attempts} attempts.`);
+          throw new Error(
+            `Failed to acquire distributed lock for resource: "${resource}" after ${attempts} attempts.`
+          );
         }
 
         // Apply randomized jitter backoff to prevent lock starvation
         const jitter =
-          Math.random() * (this.options.retryDelayMaxMs - this.options.retryDelayMinMs) +
+          Math.random() *
+            (this.options.retryDelayMaxMs - this.options.retryDelayMinMs) +
           this.options.retryDelayMinMs;
         await new Promise((resolve) => setTimeout(resolve, jitter));
       }
@@ -90,7 +94,10 @@ export class DistributedLockManager {
     await this.releaseLockInstances(lock.resource, lock.value);
   }
 
-  private async releaseLockInstances(resource: string, value: string): Promise<void> {
+  private async releaseLockInstances(
+    resource: string,
+    value: string
+  ): Promise<void> {
     const luaScript = `
       if redis.call("get", KEYS[1]) == ARGV[1] then
         return redis.call("del", KEYS[1])
@@ -114,7 +121,11 @@ export class DistributedLockManager {
    * RAII-style async wrapper ensuring automatic lock release in finally blocks,
    * with automatic heartbeat renewal and long-operation monitoring (> 10s alert).
    */
-  public async using<T>(resource: string, ttlMs: number, fn: (lock: Lock) => Promise<T>): Promise<T> {
+  public async using<T>(
+    resource: string,
+    ttlMs: number,
+    fn: (lock: Lock) => Promise<T>
+  ): Promise<T> {
     const lock = await this.acquire(resource, ttlMs);
     const startTime = Date.now();
     let isReleased = false;
@@ -132,10 +143,15 @@ export class DistributedLockManager {
           end
         `;
         await Promise.all(
-          this.clients.map((client) => client.eval(extendScript, 1, resource, lock.value, ttlMs))
+          this.clients.map((client) =>
+            client.eval(extendScript, 1, resource, lock.value, ttlMs)
+          )
         );
       } catch (err) {
-        console.warn(`[Redlock] Failed to auto-renew lock for resource: ${resource}`, err);
+        console.warn(
+          `[Redlock] Failed to auto-renew lock for resource: ${resource}`,
+          err
+        );
       }
     }, renewalIntervalMs);
 
@@ -143,14 +159,19 @@ export class DistributedLockManager {
       const result = await fn(lock);
       const heldDuration = Date.now() - startTime;
       if (heldDuration > 10000) {
-        console.warn(`[Redlock Alert] Resource "${resource}" held lock for excessively long duration: ${heldDuration}ms`);
+        console.warn(
+          `[Redlock Alert] Resource "${resource}" held lock for excessively long duration: ${heldDuration}ms`
+        );
       }
       return result;
     } finally {
       isReleased = true;
       clearInterval(renewalTimer);
       await this.release(lock).catch((err) =>
-        console.error(`[Redlock] Error releasing lock in finally block for ${resource}:`, err)
+        console.error(
+          `[Redlock] Error releasing lock in finally block for ${resource}:`,
+          err
+        )
       );
     }
   }

@@ -176,7 +176,9 @@ export default function OfflineStatusBar() {
         role="status"
         aria-live="polite"
         className={[
-          "flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] shadow-lg backdrop-blur transition-all duration-200",
+          // Only the shadow animates; interpolating colour between the neutral
+          // boot chip and the status palette dips below WCAG contrast mid-way.
+          "flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] shadow-lg backdrop-blur transition-shadow duration-200",
           presentation.chip,
         ].join(" ")}
       >

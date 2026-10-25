@@ -114,8 +114,7 @@ export class AnomalyDetector {
     const lat1 = (prevLoc.latitude * Math.PI) / 180;
     const lat2 = (currLoc.latitude * Math.PI) / 180;
     const deltaLat = ((currLoc.latitude - prevLoc.latitude) * Math.PI) / 180;
-    const deltaLon =
-      ((currLoc.longitude - prevLoc.longitude) * Math.PI) / 180;
+    const deltaLon = ((currLoc.longitude - prevLoc.longitude) * Math.PI) / 180;
 
     const a =
       Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
@@ -126,7 +125,8 @@ export class AnomalyDetector {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
 
-    const timeDeltaHours = (currLoc.timestamp - prevLoc.timestamp) / (1000 * 3600);
+    const timeDeltaHours =
+      (currLoc.timestamp - prevLoc.timestamp) / (1000 * 3600);
     return timeDeltaHours > 0 ? distance / timeDeltaHours : 0;
   }
 
@@ -150,7 +150,9 @@ export class AnomalyDetector {
   /**
    * Evaluate anomaly score for a session
    */
-  async evaluateAnomalies(context: Partial<SessionSecurityContext>): Promise<number> {
+  async evaluateAnomalies(
+    context: Partial<SessionSecurityContext>
+  ): Promise<number> {
     const scores: Partial<AnomalyScore> = {
       deviceFingerprint: 0,
       geographicalVelocity: 0,
@@ -196,7 +198,10 @@ export class AnomalyDetector {
       scores.browserAnomalies = 20;
     }
 
-    const total = Object.values(scores).reduce((sum, val) => sum + (val || 0), 0);
+    const total = Object.values(scores).reduce(
+      (sum, val) => sum + (val || 0),
+      0
+    );
     return Math.min(total, 100);
   }
 
@@ -321,9 +326,7 @@ export class AnomalyDetector {
   /**
    * Get stored geolocation
    */
-  private async getStoredLocation(
-    userId: string
-  ): Promise<GeoLocation | null> {
+  private async getStoredLocation(userId: string): Promise<GeoLocation | null> {
     const key = `geo_loc:${userId}`;
     const data = await redisService.get(key);
     return data ? JSON.parse(data) : null;
@@ -350,7 +353,10 @@ export class AnomalyDetector {
   /**
    * Request step-up authentication
    */
-  private async requestStepUpAuth(userId: string, sessionId: string): Promise<void> {
+  private async requestStepUpAuth(
+    userId: string,
+    sessionId: string
+  ): Promise<void> {
     const key = `step_up:${sessionId}`;
     await redisService.set(
       key,
@@ -366,9 +372,7 @@ export class AnomalyDetector {
   /**
    * Get risk level from anomaly score
    */
-  private getRiskLevel(
-    score: number
-  ): 'low' | 'medium' | 'high' | 'critical' {
+  private getRiskLevel(score: number): 'low' | 'medium' | 'high' | 'critical' {
     if (score < 30) return 'low';
     if (score < 60) return 'medium';
     if (score < 85) return 'high';
@@ -398,7 +402,10 @@ export class AnomalyDetector {
   /**
    * Get audit trail for user
    */
-  async getAuditTrail(userId: string, limit: number = 100): Promise<AuditLogEntry[]> {
+  async getAuditTrail(
+    userId: string,
+    limit: number = 100
+  ): Promise<AuditLogEntry[]> {
     const key = `audit:security:${userId}`;
     const entries = await redisService.lrange(key, 0, limit - 1);
     return entries.map((entry) => JSON.parse(entry));

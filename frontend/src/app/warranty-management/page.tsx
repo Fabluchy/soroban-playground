@@ -25,7 +25,7 @@ export default function WarrantyManagementPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <section className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <header>
@@ -108,6 +108,6 @@ export default function WarrantyManagementPage() {
           </p>
         )}
       </div>
-    </main>
+    </section>
   );
 }

@@ -23,7 +23,8 @@ export class SseTelemetryEngine {
 
     res.flushHeaders?.();
 
-    const lastEventIdHeader = req.headers['last-event-id'] || req.query.lastEventId;
+    const lastEventIdHeader =
+      req.headers['last-event-id'] || req.query.lastEventId;
 
     // 2. If client provided Last-Event-ID, replay missed events from history buffer
     if (lastEventIdHeader) {
@@ -64,7 +65,9 @@ export class SseTelemetryEngine {
 
     // Store in event history ring buffer for reconnection recovery
     SseTelemetryEngine.eventHistory.push(fullEvent);
-    if (SseTelemetryEngine.eventHistory.length > SseTelemetryEngine.maxHistorySize) {
+    if (
+      SseTelemetryEngine.eventHistory.length > SseTelemetryEngine.maxHistorySize
+    ) {
       SseTelemetryEngine.eventHistory.shift();
     }
 

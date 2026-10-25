@@ -1,136 +1,201 @@
-use soroban_sdk::{Address, Env, String, Vec};
-use crate::types::{DataKey, Error, Reporter};
+#![no_std]
 
-const KEY_INITIALIZED: &str = "initialized";
-const DEFAULT_MAX_PRICE_AGE: u64 = 3600;
-const DEFAULT_MIN_QUORUM: u32 = 3;
+use soroban_sdk::{Address, Env, String};
+use crate::types::{
+    AggregatedPrice, DataKey, Error, InstanceKey, OracleNode, TwapAccumulator,
+};
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+pub const DEFAULT_MAX_PRICE_AGE: u64 = 3_600;   // 1 hour
+pub const DEFAULT_OUTLIER_BPS: u32 = 2_000;      // 20%
+pub const DEFAULT_CB_BPS: u32 = 2_000;           // 20%
+pub const DEFAULT_TWAP_WINDOW: u64 = 3_600;      // 1 hour
+pub const MIN_NODES: u32 = 1;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 pub fn is_initialized(env: &Env) -> bool {
-    env.storage()
-        .persistent()
-        .has(&DataKey::Admin)
+    env.storage().instance().has(&InstanceKey::Initialized)
 }
+
+pub fn set_initialized(env: &Env) {
+    env.storage()
+        .instance()
+        .set(&InstanceKey::Initialized, &true);
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
 
 pub fn get_admin(env: &Env) -> Result<Address, Error> {
     env.storage()
-        .persistent()
-        .get(&DataKey::Admin)
+        .instance()
+        .get(&InstanceKey::Admin)
         .ok_or(Error::NotInitialized)
-        .map(|a: Address| a)
 }
 
 pub fn set_admin(env: &Env, admin: &Address) {
-    env.storage()
-        .persistent()
-        .set(&DataKey::Admin, admin);
+    env.storage().instance().set(&InstanceKey::Admin, admin);
 }
+
+// ── Config ────────────────────────────────────────────────────────────────────
 
 pub fn get_max_price_age(env: &Env) -> u64 {
     env.storage()
-        .persistent()
-        .get(&DataKey::MaxPriceAge)
+        .instance()
+        .get(&InstanceKey::MaxPriceAge)
         .unwrap_or(DEFAULT_MAX_PRICE_AGE)
 }
 
-pub fn set_max_price_age(env: &Env, max_age: u64) {
+pub fn set_max_price_age(env: &Env, age: u64) {
+    env.storage().instance().set(&InstanceKey::MaxPriceAge, &age);
+}
+
+pub fn get_outlier_bps(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&InstanceKey::OutlierThresholdBps)
+        .unwrap_or(DEFAULT_OUTLIER_BPS)
+}
+
+pub fn set_outlier_bps(env: &Env, bps: u32) {
+    env.storage()
+        .instance()
+        .set(&InstanceKey::OutlierThresholdBps, &bps);
+}
+
+pub fn get_circuit_breaker_bps(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&InstanceKey::CircuitBreakerBps)
+        .unwrap_or(DEFAULT_CB_BPS)
+}
+
+pub fn set_circuit_breaker_bps(env: &Env, bps: u32) {
+    env.storage()
+        .instance()
+        .set(&InstanceKey::CircuitBreakerBps, &bps);
+}
+
+pub fn get_twap_window(env: &Env) -> u64 {
+    env.storage()
+        .instance()
+        .get(&InstanceKey::TwapWindowSeconds)
+        .unwrap_or(DEFAULT_TWAP_WINDOW)
+}
+
+pub fn set_twap_window(env: &Env, window: u64) {
+    env.storage()
+        .instance()
+        .set(&InstanceKey::TwapWindowSeconds, &window);
+}
+
+// ── Circuit breaker ───────────────────────────────────────────────────────────
+
+pub fn is_circuit_breaker_tripped(env: &Env) -> bool {
     env.storage()
         .persistent()
-        .set(&DataKey::MaxPriceAge, &max_age);
+        .get(&DataKey::CircuitBreaker)
+        .unwrap_or(false)
 }
 
-pub fn get_min_quorum(env: &Env) -> u32 {
+pub fn set_circuit_breaker(env: &Env, tripped: bool) {
     env.storage()
         .persistent()
-        .get(&DataKey::MinReporterQuorum)
-        .unwrap_or(DEFAULT_MIN_QUORUM)
+        .set(&DataKey::CircuitBreaker, &tripped);
 }
 
-pub fn set_min_quorum(env: &Env, quorum: u32) {
+// ── Nodes ─────────────────────────────────────────────────────────────────────
+
+pub fn get_node_count(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&InstanceKey::NodeCount)
+        .unwrap_or(0)
+}
+
+fn inc_node_count(env: &Env) -> u32 {
+    let c = get_node_count(env);
+    env.storage()
+        .instance()
+        .set(&InstanceKey::NodeCount, &(c + 1));
+    c
+}
+
+pub fn is_node(env: &Env, addr: &Address) -> bool {
     env.storage()
         .persistent()
-        .set(&DataKey::MinReporterQuorum, &quorum);
+        .get(&DataKey::IsNode(addr.clone()))
+        .unwrap_or(false)
 }
 
-pub fn add_reporter(env: &Env, address: &Address, assets: Vec<String>) {
-    let reporter = Reporter {
-        address: address.clone(),
-        active: true,
-        submissions: 0,
-    };
-
-    let mut reporters: Vec<Address> = env.storage()
-        .persistent()
-        .get(&DataKey::Reporters)
-        .unwrap_or_default();
-
-    if !reporters.iter().any(|r| r == address) {
-        reporters.push_back(address.clone());
-        env.storage()
-            .persistent()
-            .set(&DataKey::Reporters, &reporters);
-    }
-
+pub fn get_node_id(env: &Env, addr: &Address) -> Option<u32> {
     env.storage()
         .persistent()
-        .set(&DataKey::ReporterAssets(address.clone()), &assets);
+        .get(&DataKey::NodeId(addr.clone()))
 }
 
-pub fn get_reporters(env: &Env) -> Vec<Address> {
+pub fn add_node(env: &Env, node: &OracleNode) -> u32 {
+    let id = inc_node_count(env);
     env.storage()
         .persistent()
-        .get(&DataKey::Reporters)
-        .unwrap_or_default()
-}
-
-pub fn store_price(env: &Env, asset_id: &String, prices: Vec<i128>, timestamp: u64) {
-    let sorted = sort_prices(prices.clone());
-    let median = sorted.get(sorted.len() / 2).unwrap_or(i128::MIN);
-    let mut deviation = i128::MIN;
-
-    if sorted.len() > 1 {
-        for price in sorted.iter() {
-            let diff = (price.unwrap_or(i128::MIN) - median).abs();
-            if diff > deviation {
-                deviation = diff;
-            }
-        }
-    }
-
-    let age = env.ledger().timestamp().saturating_sub(timestamp);
-    let price_data = (median, deviation, age, sorted.len() as u32);
-
+        .set(&DataKey::Node(id), node);
     env.storage()
         .persistent()
-        .set(&DataKey::Price(asset_id.clone()), &price_data);
-}
-
-pub fn get_price(env: &Env, asset_id: &String) -> Result<(i128, i128, u64, u32), Error> {
+        .set(&DataKey::IsNode(node.address.clone()), &true);
     env.storage()
         .persistent()
-        .get(&DataKey::Price(asset_id.clone()))
-        .ok_or(Error::AssetNotSupported)
-        .map(|(m, d, a, c): (i128, i128, u64, u32)| (m, d, a, c))
+        .set(&DataKey::NodeId(node.address.clone()), &id);
+    id
 }
 
-pub fn increment_reporter_submissions(env: &Env, reporter: &Address) {
-    let current: u32 = env.storage()
+pub fn get_node(env: &Env, id: u32) -> Result<OracleNode, Error> {
+    env.storage()
         .persistent()
-        .get(&DataKey::ReporterAssets(reporter.clone()))
-        .map(|_| 1)
-        .unwrap_or(0);
-
-    // Update reporter submission count via events
+        .get(&DataKey::Node(id))
+        .ok_or(Error::NodeNotFound)
 }
 
-fn sort_prices(mut prices: Vec<i128>) -> Vec<i128> {
-    for i in 0..prices.len() {
-        for j in i + 1..prices.len() {
-            if prices.get(i).unwrap_or(&i128::MIN) > prices.get(j).unwrap_or(&i128::MIN) {
-                let tmp = prices.get(i).unwrap_or(&i128::MIN);
-                prices.set(i, prices.get(j).unwrap_or(&i128::MIN));
-                prices.set(j, *tmp);
-            }
-        }
-    }
-    prices
+pub fn save_node(env: &Env, id: u32, node: &OracleNode) {
+    env.storage().persistent().set(&DataKey::Node(id), node);
+}
+
+// ── Aggregated prices ─────────────────────────────────────────────────────────
+
+pub fn get_aggregated_price(env: &Env, asset: &String) -> Option<AggregatedPrice> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::AggregatedPrice(asset.clone()))
+}
+
+pub fn save_aggregated_price(env: &Env, price: &AggregatedPrice) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::AggregatedPrice(price.asset.clone()), price);
+}
+
+pub fn get_prev_median(env: &Env, asset: &String) -> Option<i128> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::PrevMedian(asset.clone()))
+}
+
+pub fn save_prev_median(env: &Env, asset: &String, median: i128) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::PrevMedian(asset.clone()), &median);
+}
+
+// ── TWAP accumulator ──────────────────────────────────────────────────────────
+
+pub fn get_twap_accum(env: &Env, asset: &String) -> Option<TwapAccumulator> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::TwapAccum(asset.clone()))
+}
+
+pub fn save_twap_accum(env: &Env, asset: &String, accum: &TwapAccumulator) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::TwapAccum(asset.clone()), accum);
 }

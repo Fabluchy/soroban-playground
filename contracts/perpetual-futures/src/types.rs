@@ -9,6 +9,7 @@ pub enum PositionStatus {
     Active,
     Closed,
     Liquidated,
+    PartiallyLiquidated,
 }
 
 #[contracttype]
@@ -22,6 +23,7 @@ pub struct Position {
     pub entry_price: i128,
     pub collateral: i128,
     pub status: PositionStatus,
+    pub accumulated_funding: i128,
 }
 
 #[contracttype]
@@ -31,6 +33,23 @@ pub struct FundingRate {
     pub index_price: i128,
     pub rate_bps: i32,
     pub last_update: u64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AccountSummary {
+    pub collateral: i128,
+    pub unrealized_pnl: i128,
+    pub equity: i128,
+    pub total_position_size: i128,
+    pub margin_ratio_bps: i128,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct OpenInterest {
+    pub long_oi: i128,
+    pub short_oi: i128,
 }
 
 #[contracterror]
@@ -47,4 +66,6 @@ pub enum Error {
     PositionNotFound = 8,
     PositionNotActive = 9,
     InsufficientMargin = 10,
+    InvalidAmount = 11,
+    PositionNotLiquidatable = 12,
 }

@@ -104,7 +104,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
           {getActiveFilterCount() > 0 && (
             <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
               {getActiveFilterCount()}

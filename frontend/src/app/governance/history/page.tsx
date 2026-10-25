@@ -177,7 +177,7 @@ export default function QuorumHistoryPage() {
               <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
                 {stat.label}
               </p>
-              <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+              <h2 className="text-2xl font-bold mt-1">{stat.value}</h2>
             </div>
           ))}
         </div>
@@ -197,7 +197,10 @@ export default function QuorumHistoryPage() {
               className="w-full bg-transparent pl-12 pr-4 py-3 text-sm outline-none placeholder:text-slate-600"
             />
           </div>
-          <button className="p-3 rounded-xl hover:bg-slate-800 text-slate-400 transition">
+          <button
+            aria-label="Refresh governance history"
+            className="p-3 rounded-xl hover:bg-slate-800 text-slate-400 transition"
+          >
             <Filter size={18} />
           </button>
         </div>

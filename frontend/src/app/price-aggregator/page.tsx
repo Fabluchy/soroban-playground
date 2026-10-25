@@ -202,7 +202,7 @@ export default function PriceAggregatorPage() {
   }, [contractId, walletAddress]);
 
   return (
-    <main className="min-h-screen bg-slate-950 p-4 md:p-8">
+    <section className="min-h-screen bg-slate-950 p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="flex gap-2">
           <input
@@ -251,6 +251,6 @@ export default function PriceAggregatorPage() {
           onUnpause={handleUnpause}
         />
       </div>
-    </main>
+    </section>
   );
 }

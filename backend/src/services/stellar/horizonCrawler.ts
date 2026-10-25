@@ -37,7 +37,7 @@ export class HorizonCrawlerService {
     if (this.isRunning) return;
     this.isRunning = true;
     console.log('[HorizonCrawler] Background node discovery crawler started.');
-    
+
     // Initial crawl run
     this.runCrawlCycle();
 
@@ -68,7 +68,11 @@ export class HorizonCrawlerService {
     const validatedNodes: StellarNode[] = [];
 
     for (const node of candidateNodes) {
-      const health = await this.benchmarkNode(node.url, node.type, consensusLedger);
+      const health = await this.benchmarkNode(
+        node.url,
+        node.type,
+        consensusLedger
+      );
       if (health.isHealthy) {
         validatedNodes.push(health);
       }
@@ -94,7 +98,10 @@ export class HorizonCrawlerService {
     for (const seed of SEED_NODES) {
       try {
         if (seed.type === 'horizon') {
-          const res = await axios.get(`${seed.url}/ledgers?order=desc&limit=1`, { timeout: 3000 });
+          const res = await axios.get(
+            `${seed.url}/ledgers?order=desc&limit=1`,
+            { timeout: 3000 }
+          );
           const sequence = res.data._embedded.records[0].sequence;
           ledgerHeights.push(sequence);
         }
@@ -121,7 +128,9 @@ export class HorizonCrawlerService {
       let latestLedger = 0;
 
       if (type === 'horizon') {
-        const res = await axios.get(`${url}/ledgers?order=desc&limit=1`, { timeout: 4000 });
+        const res = await axios.get(`${url}/ledgers?order=desc&limit=1`, {
+          timeout: 4000,
+        });
         latestLedger = res.data._embedded.records[0].sequence;
       } else {
         const res = await axios.post(
@@ -133,10 +142,11 @@ export class HorizonCrawlerService {
       }
 
       const latencyMs = Date.now() - startTime;
-      
+
       // Node is healthy if within allowable ledger synchronization threshold
       const isHealthy =
-        consensusLedger === 0 || consensusLedger - latestLedger <= LEDGER_DESYNC_THRESHOLD;
+        consensusLedger === 0 ||
+        consensusLedger - latestLedger <= LEDGER_DESYNC_THRESHOLD;
 
       return {
         url,

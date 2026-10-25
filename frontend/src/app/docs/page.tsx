@@ -72,6 +72,7 @@ export default function APIDocumentation() {
           <div className="flex items-center gap-4 bg-gray-900 p-2 rounded-xl border border-gray-800">
             <Layers className="w-5 h-5 text-gray-500 ml-2" />
             <select
+              aria-label="API version"
               value={selectedVersion}
               onChange={(e) => setSelectedVersion(e.target.value)}
               className="bg-transparent border-none focus:ring-0 font-medium text-primary-400 pr-8"
@@ -101,9 +102,9 @@ export default function APIDocumentation() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-2">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
               Endpoints
-            </h3>
+            </h2>
             {ENDPOINTS.map((endpoint) => (
               <button
                 key={endpoint.name}
@@ -142,28 +143,34 @@ export default function APIDocumentation() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-gray-500 flex items-center gap-2">
                         <Terminal className="w-4 h-4" /> Request Schema
-                      </h4>
+                      </h3>
                       <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 font-mono text-sm overflow-hidden relative group">
                         <pre className="text-emerald-400">
                           {(endpoint as any)[selectedVersion].request}
                         </pre>
-                        <button className="absolute top-2 right-2 p-2 bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          aria-label="Copy code example"
+                          className="absolute top-2 right-2 p-2 bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-gray-500 flex items-center gap-2">
                         <FileCode className="w-4 h-4" /> Response Schema
-                      </h4>
+                      </h3>
                       <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 font-mono text-sm overflow-hidden relative group">
                         <pre className="text-blue-400">
                           {(endpoint as any)[selectedVersion].response}
                         </pre>
-                        <button className="absolute top-2 right-2 p-2 bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          aria-label="Copy code example"
+                          className="absolute top-2 right-2 p-2 bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
@@ -173,10 +180,10 @@ export default function APIDocumentation() {
                   {/* Example Comparison if v2 selected */}
                   {selectedVersion === "v2" && (
                     <div className="mt-8 border-t border-gray-800 pt-8">
-                      <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <ArrowRightLeft className="w-5 h-5 text-primary-500" />
                         v1 vs v2 Side-by-Side
-                      </h4>
+                      </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-800 italic text-gray-500 text-xs">
                           v1: camelCase (Legacy)

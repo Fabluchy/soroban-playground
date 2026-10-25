@@ -118,6 +118,8 @@ export function useMonaco({
           const editor = monacoAPI.editor.create(containerRef.current, {
             language,
             value: valueRef.current,
+            ariaLabel: "Rust contract source editor",
+            accessibilitySupport: "on",
             theme: MONACO_THEME_NAME,
             minimap: { enabled: false },
             fontSize: 14,

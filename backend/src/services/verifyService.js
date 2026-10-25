@@ -533,6 +533,69 @@ export class VerifyService {
     return publicRecord(mapRow(row));
   }
 
+  async getSource(id) {
+    await this.ensureTable();
+    let row = await this.db.get(`SELECT * FROM ${TABLE_NAME} WHERE id = ?`, [
+      id,
+    ]);
+
+    if (!row) {
+      row = await this.db.get(
+        `SELECT * FROM ${TABLE_NAME} WHERE contract_id = ?
+         ORDER BY updated_at DESC LIMIT 1`,
+        [id]
+      );
+    }
+
+    if (!row) {
+      throw new VerificationError(
+        404,
+        'VERIFICATION_NOT_FOUND',
+        'Verification record not found'
+      );
+    }
+
+    if (row.status !== 'verified') {
+      throw new VerificationError(
+        409,
+        'SOURCE_NOT_VERIFIED',
+        'Source code is only available for verified contracts'
+      );
+    }
+
+    return {
+      id: row.id,
+      contractId: row.contract_id,
+      network: row.network,
+      sourceCode: row.source_code,
+      sourceHash: row.source_hash,
+      verifiedAt: row.verified_at || null,
+      files: [{ path: 'src/lib.rs', content: row.source_code }],
+    };
+  }
+
+  async searchVerifications({
+    contractId,
+    network,
+    status,
+    limit = 50,
+    offset = 0,
+  } = {}) {
+    const records = await this.listVerifications({
+      contractId,
+      network,
+      status,
+      limit,
+    });
+
+    return {
+      records,
+      total: records.length,
+      limit: Math.min(Math.max(Number(limit) || 50, 1), 200),
+      offset: Math.max(Number(offset) || 0, 0),
+    };
+  }
+
   async listVerifications({ contractId, network, status, limit = 50 } = {}) {
     await this.ensureTable();
     const clauses = [];

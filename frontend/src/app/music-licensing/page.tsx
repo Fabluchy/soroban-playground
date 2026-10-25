@@ -71,7 +71,10 @@ export default function MusicLicensingDashboard() {
             <div className="bg-[#12121A]/70 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col group hover:bg-[#12121A] transition-all">
               <div className="w-full h-48 bg-gradient-to-br from-[#D946EF]/40 to-[#06B6D4]/40 rounded-xl mb-4 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
-                  <button className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]">
+                  <button
+                    aria-label="Play track preview"
+                    className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]"
+                  >
                     <svg
                       width="24"
                       height="24"
@@ -101,7 +104,10 @@ export default function MusicLicensingDashboard() {
             <div className="bg-[#12121A]/70 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col group hover:bg-[#12121A] transition-all">
               <div className="w-full h-48 bg-gradient-to-br from-[#06B6D4]/40 to-[#fbabff]/40 rounded-xl mb-4 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
-                  <button className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]">
+                  <button
+                    aria-label="Play track preview"
+                    className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]"
+                  >
                     <svg
                       width="24"
                       height="24"
@@ -133,7 +139,10 @@ export default function MusicLicensingDashboard() {
             <div className="bg-[#12121A]/70 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col group hover:bg-[#12121A] transition-all">
               <div className="w-full h-48 bg-gradient-to-br from-[#fbabff]/40 to-[#D946EF]/40 rounded-xl mb-4 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-sm">
-                  <button className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]">
+                  <button
+                    aria-label="Play track preview"
+                    className="w-12 h-12 rounded-full bg-[#D946EF] flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)]"
+                  >
                     <svg
                       width="24"
                       height="24"
@@ -170,7 +179,10 @@ export default function MusicLicensingDashboard() {
             {/* List Item 1 */}
             <div className="flex items-center justify-between bg-[#12121A]/50 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:bg-[#12121A] transition-colors group">
               <div className="flex items-center gap-4">
-                <button className="w-10 h-10 rounded-full bg-[#D946EF]/20 text-[#D946EF] flex items-center justify-center group-hover:bg-[#D946EF] group-hover:text-white transition-colors">
+                <button
+                  aria-label="Play track preview"
+                  className="w-10 h-10 rounded-full bg-[#D946EF]/20 text-[#D946EF] flex items-center justify-center group-hover:bg-[#D946EF] group-hover:text-white transition-colors"
+                >
                   <svg
                     width="18"
                     height="18"
@@ -181,7 +193,7 @@ export default function MusicLicensingDashboard() {
                   </svg>
                 </button>
                 <div>
-                  <h4 className="font-bold text-white">Digital Pulse</h4>
+                  <h3 className="font-bold text-white">Digital Pulse</h3>
                   <p className="text-sm text-[#d6c0d3]">
                     Cyber_Punk_99 • 128 BPM • Techno
                   </p>
@@ -195,7 +207,10 @@ export default function MusicLicensingDashboard() {
             {/* List Item 2 */}
             <div className="flex items-center justify-between bg-[#12121A]/50 backdrop-blur-md border border-white/5 rounded-xl p-4 hover:bg-[#12121A] transition-colors group">
               <div className="flex items-center gap-4">
-                <button className="w-10 h-10 rounded-full bg-[#D946EF]/20 text-[#D946EF] flex items-center justify-center group-hover:bg-[#D946EF] group-hover:text-white transition-colors">
+                <button
+                  aria-label="Play track preview"
+                  className="w-10 h-10 rounded-full bg-[#D946EF]/20 text-[#D946EF] flex items-center justify-center group-hover:bg-[#D946EF] group-hover:text-white transition-colors"
+                >
                   <svg
                     width="18"
                     height="18"
@@ -206,7 +221,7 @@ export default function MusicLicensingDashboard() {
                   </svg>
                 </button>
                 <div>
-                  <h4 className="font-bold text-white">Bassline Theory</h4>
+                  <h3 className="font-bold text-white">Bassline Theory</h3>
                   <p className="text-sm text-[#d6c0d3]">
                     Producer_X • 140 BPM • Dubstep
                   </p>
@@ -226,14 +241,17 @@ export default function MusicLicensingDashboard() {
           <div className="flex items-center gap-4 w-1/4">
             <div className="w-12 h-12 bg-gradient-to-br from-[#D946EF] to-[#06B6D4] rounded-md"></div>
             <div className="hidden md:block">
-              <h4 className="font-bold text-white text-sm">Neon Genesis</h4>
+              <h3 className="font-bold text-white text-sm">Neon Genesis</h3>
               <p className="text-xs text-[#d6c0d3]">Cyber_Punk_99</p>
             </div>
           </div>
 
           <div className="flex-1 flex flex-col items-center gap-2">
             <div className="flex items-center gap-4">
-              <button className="text-[#d6c0d3] hover:text-white">
+              <button
+                aria-label="Previous track"
+                className="text-[#d6c0d3] hover:text-white"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -246,7 +264,10 @@ export default function MusicLicensingDashboard() {
                   <line x1="5" y1="19" x2="5" y2="5"></line>
                 </svg>
               </button>
-              <button className="w-10 h-10 rounded-full bg-white text-[#0A0A10] flex items-center justify-center hover:scale-105 transition-transform">
+              <button
+                aria-label="Play or pause playback"
+                className="w-10 h-10 rounded-full bg-white text-[#0A0A10] flex items-center justify-center hover:scale-105 transition-transform"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -257,7 +278,10 @@ export default function MusicLicensingDashboard() {
                   <rect x="14" y="4" width="4" height="16"></rect>
                 </svg>
               </button>
-              <button className="text-[#d6c0d3] hover:text-white">
+              <button
+                aria-label="Next track"
+                className="text-[#d6c0d3] hover:text-white"
+              >
                 <svg
                   width="20"
                   height="20"

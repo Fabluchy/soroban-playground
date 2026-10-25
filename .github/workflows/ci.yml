@@ -31,27 +31,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Frontend Component Tests
-        run: npm run test --workspace=frontend -- src/__tests__/components
+      - name: Full Frontend Unit and Integration Tests
+        run: npm run test --workspace=frontend
         env:
           NODE_ENV: test
 
-      - name: Monaco Lifecycle & View-State Tests
-        run: >-
-          npm run test --workspace=frontend --
-          src/__tests__/lib/monacoLifecycle.test.ts
-          src/__tests__/lib/monacoViewState.test.ts
-        env:
-          NODE_ENV: test
-
-      - name: Theme Engine Unit & Integration Tests
-        run: npm run test:theme --workspace=frontend
-
+      - name: Native Node regression suites
+        run: npm run test:node --workspace=frontend
 
       - name: Build Frontend
         run: npm run build --workspace=frontend --if-present
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Verify runner Chrome
+        run: google-chrome --version
+
+      - name: All-route accessibility and keyboard regression
+        run: npx playwright test --config playwright.accessibility.config.ts
+        env:
+          PLAYWRIGHT_CHANNEL: chrome
+
+      - name: Upload accessibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-review
+          path: |
+            accessibility-report/
+            test-results/
 
   backend-lint-test:
     name: Backend Lint & Test
@@ -76,9 +84,13 @@ jobs:
         run: npm run format:check --workspace=backend --if-present
 
       - name: Run Backend Unit & Integration Tests
-        run: npx jest --config backend/jest.config.cjs backend/tests/securityHeaders.test.js backend/tests/metrics.test.js backend/tests/websocket.test.js backend/tests/websocket.heartbeat.test.js backend/tests/sorobanRpcManager.test.js backend/tests/nonceManager.test.js backend/tests/cicd-dummy.test.js backend/tests/workspace.test.js
+        run: npx jest --config backend/jest.config.cjs backend/tests/securityHeaders.test.js backend/tests/metrics.test.js backend/tests/websocket.test.js backend/tests/websocket.heartbeat.test.js backend/tests/sorobanRpcManager.test.js backend/tests/rpcLoadBalancer.test.js backend/tests/feeEstimator.test.js backend/tests/feeEstimateRoute.test.js backend/tests/staticAnalysis.test.js backend/tests/staticAnalysisRoute.test.js backend/tests/nonceManager.test.js backend/tests/cicd-dummy.test.js backend/tests/workspace.test.js
         env:
           NODE_ENV: test
+
+      - name: Run Ephemeral Quickstart Orchestrator Tests (BE-07)
+        working-directory: backend
+        run: npx jest tests/ephemeralQuickstart.integration.test.js --forceExit
 
       - name: Run CORS & OpenAPI Tests
         working-directory: backend
@@ -89,7 +101,6 @@ jobs:
           tests/corsAdmin.test.js
           tests/swagger.test.js
           tests/zodOpenApi.test.js
-
 
   security-audit:
     name: Security Audit
@@ -166,7 +177,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown,wasm32v1-none
 
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
@@ -180,9 +191,22 @@ jobs:
       - name: Run Rust Tests
         run: cargo test --all-targets --all-features
 
-      - name: Build optimized WASM artifacts
-        run: cargo build --release --target wasm32-unknown-unknown --workspace --exclude soroban-playground-indexer --exclude soroban-indexer --exclude zk-verifier --exclude testing-framework --exclude property-testing
+      # Contracts on SDK 20-22 need std and only build for wasm32-unknown-unknown.
+      # account-abstraction uses SDK 26, rejects that target, and builds only for
+      # wasm32v1-none, so the two groups are built separately to avoid cross-SDK
+      # feature unification.
+      - name: Build SDK 20-22 WASM artifacts
+        run: >-
+          cargo build --release --target wasm32-unknown-unknown
+          --workspace
+          --exclude soroban-playground-indexer --exclude soroban-indexer
+          --exclude zk-verifier --exclude testing-framework --exclude property-testing
+          --exclude account-abstraction
 
+      - name: Build SDK 26 WASM artifacts
+        run: >-
+          cargo build --release --target wasm32v1-none
+          -p account-abstraction
 
       - name: Enforce 64KB WASM size limit
         run: |
@@ -190,7 +214,7 @@ jobs:
           MAX_BYTES=65536
           fail=0
           shopt -s nullglob
-          for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
+          for wasm in target/wasm32-unknown-unknown/release/*.wasm target/wasm32v1-none/release/*.wasm; do
             size=$(stat -c%s "$wasm")
             echo "$wasm: $size bytes"
             if [ "$size" -gt "$MAX_BYTES" ]; then

@@ -245,3 +245,188 @@ a {
     animation: none;
   }
 }
+
+/* Keyboard navigation stays visible across utility styles and both themes. */
+:where(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex],
+  [contenteditable="true"]
+):focus-visible {
+  outline: 3px solid hsl(var(--foreground)) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px hsl(var(--background));
+}
+.skip-navigation {
+  position: fixed;
+  top: 0;
+  left: 1rem;
+  z-index: 10000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transform: translateY(-150%);
+}
+.skip-navigation:focus-within {
+  transform: translateY(0);
+}
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight !important;
+  }
+}
+
+/* Muted labels need the same readable contrast as body text on panel surfaces. */
+:root {
+  --readable-muted: #a3afc2;
+}
+[data-theme="light"] {
+  --readable-muted: #475569;
+}
+.text-slate-500,
+.text-slate-600 {
+  color: var(--readable-muted);
+}
+[data-theme="dark"] .text-gray-500,
+:root:not([data-theme="light"]) .text-gray-500 {
+  color: #9ca3af;
+}
+/* Gray is used alongside slate throughout legacy panels; invert both neutral ramps. */
+[data-theme="light"] {
+  --color-gray-950: #f9fafb;
+  --color-gray-900: #f3f4f6;
+  --color-gray-800: #e5e7eb;
+  --color-gray-700: #d1d5db;
+  --color-gray-600: #9ca3af;
+  --color-gray-500: #475569;
+  --color-gray-400: #4b5563;
+  --color-gray-300: #374151;
+  --color-gray-200: #1f2937;
+  --color-gray-100: #111827;
+  --color-gray-50: #030712;
+}
+/* Filled buttons keep a readable, theme-independent foreground. */
+:is(button, a).bg-cyan-600 {
+  background-color: #0e7490;
+  color: #fff;
+}
+:is(button, a).bg-cyan-600:hover {
+  background-color: #155e75;
+}
+:is(button, a).bg-emerald-600 {
+  background-color: #047857;
+  color: #fff;
+}
+:is(button, a).bg-emerald-600:hover {
+  background-color: #065f46;
+}
+:is(button, a).bg-green-600 {
+  background-color: #15803d;
+  color: #fff;
+}
+:is(button, a).bg-green-600:hover {
+  background-color: #166534;
+}
+:is(button, a).bg-amber-600 {
+  background-color: #b45309;
+  color: #fff;
+}
+:is(button, a).bg-amber-600:hover {
+  background-color: #92400e;
+}
+:is(button, a).bg-orange-600 {
+  background-color: #c2410c;
+  color: #fff;
+}
+:is(button, a).bg-orange-600:hover {
+  background-color: #9a3412;
+}
+:is(button, a).bg-red-500 {
+  background-color: #b91c1c;
+  color: #fff;
+}
+:is(button, a).bg-red-500:hover {
+  background-color: #991b1b;
+}
+:is(button, a).bg-violet-500 {
+  background-color: #6d28d9;
+  color: #fff;
+}
+:is(button, a).bg-violet-500:hover {
+  background-color: #5b21b6;
+}
+:is(button, a).bg-emerald-500 {
+  background-color: #047857;
+  color: #fff;
+}
+:is(button, a).bg-emerald-500:hover {
+  background-color: #065f46;
+}
+:is(button, a).bg-blue-600 {
+  background-color: #1d4ed8;
+  color: #fff;
+}
+:is(button, a).bg-blue-600:hover {
+  background-color: #1e40af;
+}
+
+:is(button, a).bg-\[\#0070FF\] {
+  background-color: #005dcc;
+  color: #fff;
+}
+:is(button, a).bg-\[\#D946EF\] {
+  background-color: #a21caf;
+  color: #fff;
+}
+.text-\[\#D946EF\] {
+  color: #f0abfc;
+}
+
+/* Low-emphasis timestamps remain readable; opacity must not erase small labels. */
+.text-\[10px\].opacity-70,
+.text-\[11px\].opacity-70 {
+  opacity: 1;
+}
+:is(button, a).bg-gray-700.text-gray-400 {
+  color: #f3f4f6;
+}
+:is(button, a).bg-gray-700.text-gray-400:hover {
+  background-color: #374151;
+}
+
+:root:not([data-theme="light"]) .bg-gray-100.text-gray-500 {
+  color: #475569;
+}
+[data-theme="light"] .bg-white .text-gray-500,
+[data-theme="light"] .bg-gray-100.text-gray-500 {
+  color: #cbd5e1;
+}
+
+[data-theme="light"] .template-library .text-gray-500 {
+  color: #cbd5e1;
+}
+
+[data-theme="light"] .bg-emerald-500\/10.text-emerald-300 {
+  color: #065f46;
+}
+
+/* Template surfaces deliberately remain light in the default palette. */
+:root:not([data-theme="light"]) .template-library .text-gray-500 {
+  color: #475569;
+}
+/* An opaque status badge maintains contrast on both light and dark pages. */
+.bg-emerald-500\/10.text-emerald-300 {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+[data-theme="light"] .asset-balance-errors {
+  color: #92400e;
+}

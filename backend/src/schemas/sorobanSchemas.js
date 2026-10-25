@@ -107,6 +107,16 @@ export const deployBodyV1 = z.object({
   contractName: contractName('contractName'),
   network: optional(network('network')),
   sourceAccount: optional(sourceAccount('sourceAccount')),
+  preflight: z
+    .object({
+      salt: z.string().regex(/^[a-fA-F0-9]{64}$/),
+      expectedWasmHash: z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .optional(),
+      mainnetConfirmed: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export const deployBodyV2 = z.object({

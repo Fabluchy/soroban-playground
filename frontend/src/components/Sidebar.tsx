@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useModalAccessibility } from "@/accessibility/useModalAccessibility";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFreighterWallet } from "@/hooks/useFreighterWallet";
@@ -122,9 +130,11 @@ export default function SidebarShell({
     },
   );
 
-  const drawerRef = useRef<HTMLElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
-  const touchStartRef = useRef<{ x: number; y: number; at: number } | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; at: number } | null>(
+    null,
+  );
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const closeDrawer = useCallback(() => {
@@ -137,55 +147,38 @@ export default function SidebarShell({
     // jsdom test environment, and the sidebar must not throw on mount when the
     // motion preference cannot be read. Skeletons degrade via CSS
     // `prefers-reduced-motion` anyway, so a false default is harmless.
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
       return;
     }
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(query.matches);
-    const onChange = (event: MediaQueryListEvent) => setReducedMotion(event.matches);
+    const onChange = (event: MediaQueryListEvent) =>
+      setReducedMotion(event.matches);
     query.addEventListener("change", onChange);
     return () => query.removeEventListener("change", onChange);
   }, []);
 
+  useModalAccessibility(drawerRef, isOpen, closeDrawer);
   useEffect(() => {
     if (!isOpen) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeDrawer();
-        return;
-      }
-      if (event.key !== "Tab" || !drawerRef.current) return;
-
-      const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKeyDown);
     };
-  }, [isOpen, closeDrawer]);
+  }, [isOpen]);
 
   // Touch: swipe left on the drawer to dismiss it.
   const handleTouchStart = (event: React.TouchEvent) => {
     const touch = event.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, at: Date.now() };
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      at: Date.now(),
+    };
   };
 
   const handleDrawerTouchEnd = (event: React.TouchEvent) => {
@@ -281,7 +274,11 @@ export default function SidebarShell({
       </div>
 
       {/* Desktop Sidebar */}
-      <aside
+      <nav
+        id="primary-navigation"
+        role="navigation"
+        aria-label="Primary navigation"
+        tabIndex={-1}
         data-tour="sidebar"
         className={`fixed inset-y-0 left-0 z-20 hidden md:flex flex-col bg-slate-950/80 border-r border-slate-800/60 backdrop-blur-xl transition-all duration-300 ${
           collapsed ? "w-20" : "w-64"
@@ -432,7 +429,7 @@ export default function SidebarShell({
             </div>
           </div>
         )}
-      </aside>
+      </nav>
 
       {/* Mobile Drawer Backdrop */}
       {isOpen && (
@@ -444,9 +441,11 @@ export default function SidebarShell({
       )}
 
       {/* Mobile Sidebar Drawer */}
-      <aside
+      <div
         ref={drawerRef}
         id="mobile-navigation-drawer"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
@@ -564,7 +563,7 @@ export default function SidebarShell({
             )}
           </div>
         </div>
-      </aside>
+      </div>
 
       {/* Main Content Area */}
       <div
@@ -580,6 +579,7 @@ export default function SidebarShell({
         >
           <div className="flex items-center gap-3" suppressHydrationWarning>
             <button
+              id="primary-navigation-mobile"
               ref={hamburgerRef}
               onClick={() => setIsOpen(true)}
               className="flex items-center justify-center min-h-[44px] min-w-[44px] -ml-2 rounded-lg text-slate-400 hover:bg-white/5 md:hidden"
@@ -605,7 +605,11 @@ export default function SidebarShell({
             </div>
           </div>
 
-          <div className="flex items-center gap-3" data-tour="wallet" suppressHydrationWarning>
+          <div
+            className="flex items-center gap-3"
+            data-tour="wallet"
+            suppressHydrationWarning
+          >
             {/*
               #1527 — the palette has no button of its own, so the shortcut has
               to be advertised. `⌘K` on Apple platforms, `Ctrl K` elsewhere; the
@@ -662,7 +666,12 @@ export default function SidebarShell({
         </header>
 
         {/* Dynamic Children Panel */}
-        <main className="flex-1" data-tour="main">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1"
+          data-tour="main"
+        >
           {children}
         </main>
       </div>

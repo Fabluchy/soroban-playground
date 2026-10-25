@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { ScreenReaderAnnouncer } from "@/accessibility/ScreenReaderAnnouncer";
+import { SkipNavigation } from "@/accessibility/SkipNavigation";
 import "./globals.css";
 import { GraphQLProvider } from "../components/providers/GraphQLProvider";
 import { WalletProvider } from "../components/providers/WalletProvider";
@@ -42,6 +44,8 @@ export default function RootLayout({
         <ThemeBootstrapScript />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased" suppressHydrationWarning>
+        <ScreenReaderAnnouncer />
+        <SkipNavigation />
         <ThemeProvider>
           <WalletProvider>
             <GraphQLProvider>
@@ -53,7 +57,10 @@ export default function RootLayout({
               <OfflineProvider>
                 {/* #1526 — one workspace snapshot for the whole shell. */}
                 <WorkspaceProvider>
-                  {/* #1527 — binds Cmd/Ctrl+K and renders the palette once. */}
+                  {/*
+                    #1527 / #1725 — renders both palettes once: the Spotlight
+                    (Cmd/Ctrl+K) and the classic command search (/).
+                  */}
                   <CommandPaletteProvider>
                     <ErrorBoundary level="global">
                       <SidebarShell>

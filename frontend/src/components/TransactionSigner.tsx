@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useModalAccessibility } from "@/accessibility/useModalAccessibility";
 import {
   Shield,
   Info,
@@ -86,6 +87,8 @@ export default function TransactionSigner({
     setStage("review");
   }, [isOpen, xdr]);
 
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  useModalAccessibility(dialogRef, isOpen && Boolean(xdr), isSigning ? undefined : onCancel);
   if (!isOpen || !xdr) return null;
 
   const handleSign = async () => {
@@ -110,13 +113,13 @@ export default function TransactionSigner({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="transaction-signer-title" className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden">
         <div className="p-6 border-b border-white/8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-400">
               <Shield size={20} />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 id="transaction-signer-title" className="text-xl font-semibold text-white">
               Sign Transaction
             </h2>
           </div>
@@ -144,7 +147,7 @@ export default function TransactionSigner({
             {transaction ? (
               <dl className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Operations</span>
+                <dt className="text-slate-400">Operations</dt>
                   <dd className="text-white font-medium">
                     {transaction.operationCount}
                   </dd>

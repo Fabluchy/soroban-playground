@@ -10,6 +10,7 @@ import {
 } from "@stellar/stellar-sdk";
 
 const SAC_STORAGE_PREFIX = "stellar_tracked_sac_v1";
+export const TRACKED_SACS_UPDATED_EVENT = "stellar-tracked-sacs-updated";
 const ACCOUNT_REFRESH_MS = 15_000;
 const SAC_REFRESH_MS = 20_000;
 const PRICE_REFRESH_MS = 60_000;
@@ -232,6 +233,13 @@ function readStoredTokens(
   } catch {
     return [];
   }
+}
+
+export function getTrackedSacTokens(
+  account: string,
+  networkPassphrase: string,
+): TrackedSacToken[] {
+  return readStoredTokens(account, networkPassphrase);
 }
 
 export function useAssetBalances(
@@ -496,6 +504,11 @@ export function useAssetBalances(
       window.localStorage.setItem(
         scope,
         JSON.stringify(trackedSacs),
+      );
+      window.dispatchEvent(
+        new CustomEvent(TRACKED_SACS_UPDATED_EVENT, {
+          detail: { account, networkPassphrase },
+        }),
       );
     } catch {
       setSacError("Custom SAC tracking could not be saved in browser storage.");

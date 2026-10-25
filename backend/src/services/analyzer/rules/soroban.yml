@@ -1,0 +1,85 @@
+rules:
+  - id: soroban-unverified-address-auth
+    languages: [rust]
+    severity: ERROR
+    message: Address used to mutate contract state without require_auth()
+    metadata:
+      category: security
+      technology: soroban
+      references:
+        - https://developers.stellar.org/docs/learn/security/authorization
+    patterns:
+      - pattern-inside: |
+          fn $FUNC(..., $ADDR: Address, ...) {
+            ...
+          }
+      - pattern-either:
+          - pattern: env.storage().persistent().set(...)
+          - pattern: env.storage().temporary().set(...)
+          - pattern: env.invoke_contract(...)
+          - pattern: $CLIENT.transfer(...)
+          - pattern: $CLIENT.mint(...)
+          - pattern: $CLIENT.burn(...)
+      - pattern-not: $ADDR.require_auth()
+      - pattern-not: $ADDR.require_auth_for_args(...)
+
+  - id: soroban-missing-ttl-renewal
+    languages: [rust]
+    severity: WARNING
+    message: Persistent or temporary storage is written without extend_ttl()
+    metadata:
+      category: reliability
+      technology: soroban
+      references:
+        - https://developers.stellar.org/docs/learn/fundamentals/contract-development/storage/state-archival
+    patterns:
+      - pattern-either:
+          - pattern: env.storage().persistent().set(...)
+          - pattern: env.storage().temporary().set(...)
+      - pattern-not-inside: |
+          fn $FUNC(...) {
+            ...
+            env.storage().$KIND().extend_ttl(...);
+            ...
+          }
+
+  - id: soroban-integer-truncation
+    languages: [rust]
+    severity: ERROR
+    message: i128/u128 value is cast to a narrower integer with `as`
+    metadata:
+      category: security
+      technology: soroban
+      references:
+        - https://doc.rust-lang.org/reference/expressions/operator-expr.html
+    patterns:
+      - pattern-either:
+          - pattern: $X as i64
+          - pattern: $X as u64
+          - pattern: $X as i32
+          - pattern: $X as u32
+          - pattern: $X as i16
+          - pattern: $X as u16
+          - pattern: $X as i8
+          - pattern: $X as u8
+      - metavariable-regex:
+          metavariable: $X
+          regex: .*(i128|u128|amount|balance|total|value).*
+
+  - id: soroban-reentrancy-risk
+    languages: [rust]
+    severity: WARNING
+    message: Cross-contract invocation is followed by a storage write
+    metadata:
+      category: security
+      technology: soroban
+      references:
+        - https://developers.stellar.org/docs/learn/security/contract-security
+    patterns:
+      - pattern: |
+          env.invoke_contract(...);
+          ...
+          env.storage().$KIND().set(...);
+      - pattern-not: |
+          $ADDR.require_auth();
+          ...

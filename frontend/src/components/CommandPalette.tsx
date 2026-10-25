@@ -22,6 +22,7 @@
 
 "use client";
 
+import { useModalAccessibility } from "@/accessibility/useModalAccessibility";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -136,6 +137,8 @@ export function CommandPalette({
 }: CommandPaletteProps) {
   const router = useRouter();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  useModalAccessibility(dialogRef, open, () => onOpenChange(false));
 
   const { entries: recents, record } = useRecentFiles();
   const { contracts } = useDeployedContracts();
@@ -299,36 +302,6 @@ export function CommandPalette({
     [activeIndex, choose, onOpenChange, visibleResults],
   );
 
-  // Trap Tab inside the dialog and let Escape close from anywhere within it.
-  useEffect(() => {
-    if (!open) return;
-    const onDialogKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onOpenChange(false);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          '[data-command-palette] input, [data-command-palette] button, [data-command-palette] [tabindex]:not([tabindex="-1"])',
-        ),
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onDialogKeyDown);
-    return () => document.removeEventListener("keydown", onDialogKeyDown);
-  }, [onOpenChange, open]);
-
   if (!open) return null;
 
   const activeId = visibleResults[activeIndex]
@@ -349,6 +322,7 @@ export function CommandPalette({
       />
 
       <div
+        ref={dialogRef}
         data-command-palette
         role="dialog"
         aria-modal="true"

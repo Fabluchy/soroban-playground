@@ -3,10 +3,7 @@
 import React, { FormEvent, useMemo, useState } from "react";
 import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useWallet } from "@/components/providers/WalletProvider";
-import {
-  TrackedSacToken,
-  useAssetBalances,
-} from "@/hooks/useAssetBalances";
+import { TrackedSacToken, useAssetBalances } from "@/hooks/useAssetBalances";
 
 function formatAmount(amount: string, maximumFractionDigits = 7): string {
   const value = Number(amount);
@@ -115,7 +112,10 @@ export default function AssetBalancesPanel() {
     <section className="space-y-4" aria-labelledby="asset-balances-title">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="asset-balances-title" className="text-xl font-semibold text-white">
+          <h2
+            id="asset-balances-title"
+            className="text-xl font-semibold text-white"
+          >
             Asset Balances
           </h2>
           <p className="mt-1 text-xs text-slate-400">
@@ -170,28 +170,43 @@ export default function AssetBalancesPanel() {
           </p>
         </div>
         <p className="text-xs text-slate-400">
-          {xlmUsd !== null ? `XLM ${formatUsd(xlmUsd)}` : "XLM price unavailable"}
+          {xlmUsd !== null
+            ? `XLM ${formatUsd(xlmUsd)}`
+            : "XLM price unavailable"}
         </p>
       </div>
 
       {(error || sacError || priceError) && (
-        <div className="space-y-1 text-xs text-amber-200" role="status" aria-live="polite">
+        <div
+          className="asset-balance-errors space-y-1 text-xs text-amber-200"
+          role="status"
+          aria-live="polite"
+        >
           {error && <p>{error}</p>}
           {sacError && <p>{sacError}</p>}
           {priceError && <p>Price conversion: {priceError}</p>}
         </div>
       )}
 
-      <div className="overflow-x-auto border-b border-white/10">
+      <div
+        role="region"
+        aria-label="Asset balances table"
+        tabIndex={0}
+        className="overflow-x-auto border-b border-white/10"
+      >
         <table className="w-full min-w-[660px] text-left text-sm">
           <thead className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-500">
             <tr>
               <th className="py-3 pr-4 font-semibold">Asset</th>
               <th className="py-3 pr-4 font-semibold">Type</th>
               <th className="py-3 pr-4 text-right font-semibold">Balance</th>
-              <th className="py-3 pr-4 text-right font-semibold">Price / XLM</th>
+              <th className="py-3 pr-4 text-right font-semibold">
+                Price / XLM
+              </th>
               <th className="py-3 text-right font-semibold">Value / USD</th>
-              <th className="py-3 pl-3" aria-label="Actions" />
+              <th className="py-3 pl-3">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -253,7 +268,10 @@ export default function AssetBalancesPanel() {
             ))}
             {balances.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                <td
+                  colSpan={6}
+                  className="py-8 text-center text-sm text-slate-500"
+                >
                   {status === "connected"
                     ? "Waiting for Horizon account data..."
                     : "No wallet connected."}
@@ -267,9 +285,12 @@ export default function AssetBalancesPanel() {
       <div className="space-y-3 pt-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-200">Stellar Asset Contracts</h3>
+            <h3 className="text-sm font-semibold text-slate-200">
+              Stellar Asset Contracts
+            </h3>
             <p className="mt-1 text-xs text-slate-500">
-              SAC balances are read from Soroban persistent storage. Optional market metadata enables Horizon DEX pricing.
+              SAC balances are read from Soroban persistent storage. Optional
+              market metadata enables Horizon DEX pricing.
             </p>
           </div>
           <button
@@ -298,7 +319,9 @@ export default function AssetBalancesPanel() {
                 maxLength={12}
                 pattern="[A-Za-z0-9._-]{1,12}"
                 value={token.symbol}
-                onChange={(event) => setToken({ ...token, symbol: event.target.value })}
+                onChange={(event) =>
+                  setToken({ ...token, symbol: event.target.value })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 font-mono text-sm text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -308,7 +331,9 @@ export default function AssetBalancesPanel() {
                 required
                 maxLength={48}
                 value={token.name}
-                onChange={(event) => setToken({ ...token, name: event.target.value })}
+                onChange={(event) =>
+                  setToken({ ...token, name: event.target.value })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -319,7 +344,12 @@ export default function AssetBalancesPanel() {
                 pattern="C[A-Z2-7]{55}"
                 maxLength={56}
                 value={token.contractId}
-                onChange={(event) => setToken({ ...token, contractId: event.target.value.toUpperCase() })}
+                onChange={(event) =>
+                  setToken({
+                    ...token,
+                    contractId: event.target.value.toUpperCase(),
+                  })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 font-mono text-xs text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -331,7 +361,9 @@ export default function AssetBalancesPanel() {
                 max={18}
                 required
                 value={token.decimals}
-                onChange={(event) => setToken({ ...token, decimals: event.target.value })}
+                onChange={(event) =>
+                  setToken({ ...token, decimals: event.target.value })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 font-mono text-sm text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -340,7 +372,9 @@ export default function AssetBalancesPanel() {
               <input
                 maxLength={12}
                 value={token.marketAssetCode}
-                onChange={(event) => setToken({ ...token, marketAssetCode: event.target.value })}
+                onChange={(event) =>
+                  setToken({ ...token, marketAssetCode: event.target.value })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 font-mono text-sm text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -350,7 +384,12 @@ export default function AssetBalancesPanel() {
                 pattern="G[A-Z2-7]{55}"
                 maxLength={56}
                 value={token.marketAssetIssuer}
-                onChange={(event) => setToken({ ...token, marketAssetIssuer: event.target.value.toUpperCase() })}
+                onChange={(event) =>
+                  setToken({
+                    ...token,
+                    marketAssetIssuer: event.target.value.toUpperCase(),
+                  })
+                }
                 className="w-full border border-white/10 bg-slate-950 px-3 py-2 font-mono text-xs text-white outline-none focus:border-teal-400/60"
               />
             </label>
@@ -380,7 +419,8 @@ export default function AssetBalancesPanel() {
 
         {trackedSacs.length > 0 && (
           <p className="text-[11px] text-slate-500">
-            Tracking {trackedSacs.length} of 20 custom contracts for this account.
+            Tracking {trackedSacs.length} of 20 custom contracts for this
+            account.
           </p>
         )}
       </div>

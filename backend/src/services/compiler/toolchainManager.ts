@@ -32,48 +32,49 @@ export interface ToolchainSandboxRoute {
   env: Record<string, string>;
 }
 
-export const SUPPORTED_TOOLCHAINS: Record<SupportedToolchain, ToolchainConfig> = {
-  '1.78': {
-    channel: '1.78',
-    version: '1.78.0',
-    containerImage: 'stellar/rust-compiler:1.78-wasm',
-    targets: ['wasm32-unknown-unknown'],
-    components: ['rust-std', 'rustc', 'cargo'],
-    prewarmed: true,
-    msrv: true,
-    stdCacheAvailable: true,
-  },
-  '1.79': {
-    channel: '1.79',
-    version: '1.79.0',
-    containerImage: 'stellar/rust-compiler:1.79-wasm',
-    targets: ['wasm32-unknown-unknown'],
-    components: ['rust-std', 'rustc', 'cargo'],
-    prewarmed: true,
-    msrv: false,
-    stdCacheAvailable: true,
-  },
-  '1.80': {
-    channel: '1.80',
-    version: '1.80.0',
-    containerImage: 'stellar/rust-compiler:1.80-wasm',
-    targets: ['wasm32-unknown-unknown'],
-    components: ['rust-std', 'rustc', 'cargo'],
-    prewarmed: true,
-    msrv: false,
-    stdCacheAvailable: true,
-  },
-  nightly: {
-    channel: 'nightly',
-    version: 'nightly-2024-08-01',
-    containerImage: 'stellar/rust-compiler:nightly-wasm',
-    targets: ['wasm32-unknown-unknown'],
-    components: ['rust-std', 'rustc', 'cargo', 'rust-src'],
-    prewarmed: true,
-    msrv: false,
-    stdCacheAvailable: true,
-  },
-};
+export const SUPPORTED_TOOLCHAINS: Record<SupportedToolchain, ToolchainConfig> =
+  {
+    '1.78': {
+      channel: '1.78',
+      version: '1.78.0',
+      containerImage: 'stellar/rust-compiler:1.78-wasm',
+      targets: ['wasm32-unknown-unknown'],
+      components: ['rust-std', 'rustc', 'cargo'],
+      prewarmed: true,
+      msrv: true,
+      stdCacheAvailable: true,
+    },
+    '1.79': {
+      channel: '1.79',
+      version: '1.79.0',
+      containerImage: 'stellar/rust-compiler:1.79-wasm',
+      targets: ['wasm32-unknown-unknown'],
+      components: ['rust-std', 'rustc', 'cargo'],
+      prewarmed: true,
+      msrv: false,
+      stdCacheAvailable: true,
+    },
+    '1.80': {
+      channel: '1.80',
+      version: '1.80.0',
+      containerImage: 'stellar/rust-compiler:1.80-wasm',
+      targets: ['wasm32-unknown-unknown'],
+      components: ['rust-std', 'rustc', 'cargo'],
+      prewarmed: true,
+      msrv: false,
+      stdCacheAvailable: true,
+    },
+    nightly: {
+      channel: 'nightly',
+      version: 'nightly-2024-08-01',
+      containerImage: 'stellar/rust-compiler:nightly-wasm',
+      targets: ['wasm32-unknown-unknown'],
+      components: ['rust-std', 'rustc', 'cargo', 'rust-src'],
+      prewarmed: true,
+      msrv: false,
+      stdCacheAvailable: true,
+    },
+  };
 
 export const DEFAULT_TOOLCHAIN: SupportedToolchain = '1.80';
 export const STANDARD_WASM_TARGET = 'wasm32-unknown-unknown';
@@ -178,7 +179,10 @@ export class ToolchainManager {
     };
   }
 
-  public validateCompilerFlags(flags: string[] = []): { valid: boolean; rejectedFlag?: string } {
+  public validateCompilerFlags(flags: string[] = []): {
+    valid: boolean;
+    rejectedFlag?: string;
+  } {
     for (const flag of flags) {
       const trimmed = flag.trim();
       for (const disallowed of DISALLOWED_FLAGS) {
@@ -196,7 +200,9 @@ export class ToolchainManager {
   ): ToolchainSandboxRoute {
     const flagCheck = this.validateCompilerFlags(requestedFlags);
     if (!flagCheck.valid) {
-      throw new Error(`Disallowed compiler flag detected: "${flagCheck.rejectedFlag}"`);
+      throw new Error(
+        `Disallowed compiler flag detected: "${flagCheck.rejectedFlag}"`
+      );
     }
 
     const parsed = this.parseRustToolchainToml(rustToolchainToml || '');
@@ -233,7 +239,9 @@ export class ToolchainManager {
 
 export const toolchainManager = new ToolchainManager();
 
-export function createToolchainRouter(manager: ToolchainManager = toolchainManager): Router {
+export function createToolchainRouter(
+  manager: ToolchainManager = toolchainManager
+): Router {
   const router = express.Router();
 
   router.get('/toolchains', (_req: Request, res: Response) => {
@@ -249,7 +257,9 @@ export function createToolchainRouter(manager: ToolchainManager = toolchainManag
       const route = manager.resolveSandboxRoute(rustToolchainToml, flags);
       res.json({ success: true, route });
     } catch (err: any) {
-      res.status(400).json({ success: false, error: err?.message || String(err) });
+      res
+        .status(400)
+        .json({ success: false, error: err?.message || String(err) });
     }
   });
 

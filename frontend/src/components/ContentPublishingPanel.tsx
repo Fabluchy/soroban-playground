@@ -260,9 +260,9 @@ const ContentPublishingPanel: React.FC<ContentPublishingPanelProps> = ({
               onSubmit={handlePublish}
               className="space-y-4 rounded-3xl border border-white/5 bg-slate-900/40 p-6"
             >
-              <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-white">
                 <PenSquare size={16} /> Publish a new article
-              </h3>
+              </h2>
               <Field label="Title" htmlFor="cp-title">
                 <input
                   id="cp-title"
@@ -307,9 +307,9 @@ const ContentPublishingPanel: React.FC<ContentPublishingPanelProps> = ({
           )}
 
           <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Your articles
-            </h3>
+            </h2>
             {articles.length === 0 ? (
               <EmptyState message="No articles yet." />
             ) : (
@@ -364,9 +364,9 @@ const ContentPublishingPanel: React.FC<ContentPublishingPanelProps> = ({
               </div>
 
               <div className="rounded-3xl border border-white/5 bg-slate-900/40 p-6">
-                <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
+                <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
                   <Users size={14} /> Subscribers ({subscribers.length})
-                </h3>
+                </h2>
                 {subscribers.length === 0 ? (
                   <EmptyState message="No subscribers yet." />
                 ) : (
@@ -448,12 +448,12 @@ const ContentPublishingPanel: React.FC<ContentPublishingPanelProps> = ({
             onSubmit={handleRegister}
             className="w-full max-w-md space-y-4 rounded-3xl border border-violet-500/30 bg-slate-900 p-6"
           >
-            <h3
+            <h2
               id="cp-register-title"
               className="text-base font-bold text-white"
             >
               Register as an author
-            </h3>
+            </h2>
             <Field label="Display name" htmlFor="cp-reg-name">
               <input
                 id="cp-reg-name"
@@ -631,12 +631,12 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     >
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h4
+          <h3
             id={`article-${article.id}-title`}
             className="text-base font-bold text-white"
           >
             {article.title}
-          </h4>
+          </h3>
           <p className="text-xs text-slate-400">
             By{" "}
             <span className="font-mono">

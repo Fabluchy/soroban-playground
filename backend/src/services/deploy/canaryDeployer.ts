@@ -31,20 +31,28 @@ export class CanaryDeployer {
     this.currentStageIndex = 0;
     this.currentTrafficPercent = this.config.stages[0];
     this.isRollingBack = false;
-    console.log(`[CanaryDeployer] Started canary rollout for version ${this.config.version} at ${this.currentTrafficPercent}% traffic.`);
+    console.log(
+      `[CanaryDeployer] Started canary rollout for version ${this.config.version} at ${this.currentTrafficPercent}% traffic.`
+    );
   }
 
   /**
    * Evaluate canary metrics against baseline. If failure rate exceeds baseline by > 1%, trigger instant rollback.
    */
-  public evaluateMetrics(canaryMetrics: WorkerMetrics, baselineMetrics: WorkerMetrics): boolean {
+  public evaluateMetrics(
+    canaryMetrics: WorkerMetrics,
+    baselineMetrics: WorkerMetrics
+  ): boolean {
     if (this.isRollingBack) return false;
 
-    const errorRateDiff = canaryMetrics.failureRate - baselineMetrics.failureRate;
+    const errorRateDiff =
+      canaryMetrics.failureRate - baselineMetrics.failureRate;
 
     // Trigger instant automated rollback if canary error rate exceeds baseline by > 1%
     if (errorRateDiff > 1.0 || canaryMetrics.cpuDiscrepancyCount > 0) {
-      this.rollback(`Anomaly detected: Error rate diff is +${errorRateDiff.toFixed(2)}% or CPU instruction discrepancy found.`);
+      this.rollback(
+        `Anomaly detected: Error rate diff is +${errorRateDiff.toFixed(2)}% or CPU instruction discrepancy found.`
+      );
       return false;
     }
 
@@ -60,9 +68,13 @@ export class CanaryDeployer {
     if (this.currentStageIndex < this.config.stages.length - 1) {
       this.currentStageIndex++;
       this.currentTrafficPercent = this.config.stages[this.currentStageIndex];
-      console.log(`[CanaryDeployer] Stage promoted! Canary traffic increased to ${this.currentTrafficPercent}%.`);
+      console.log(
+        `[CanaryDeployer] Stage promoted! Canary traffic increased to ${this.currentTrafficPercent}%.`
+      );
     } else {
-      console.log(`[CanaryDeployer] Canary rollout successfully completed at 100% traffic for version ${this.config.version}!`);
+      console.log(
+        `[CanaryDeployer] Canary rollout successfully completed at 100% traffic for version ${this.config.version}!`
+      );
     }
   }
 
@@ -72,7 +84,9 @@ export class CanaryDeployer {
   public rollback(reason: string): void {
     this.isRollingBack = true;
     this.currentTrafficPercent = 0;
-    console.warn(`[CanaryDeployer ROLLBACK] Instant rollback triggered for version ${this.config.version}. Reason: ${reason}`);
+    console.warn(
+      `[CanaryDeployer ROLLBACK] Instant rollback triggered for version ${this.config.version}. Reason: ${reason}`
+    );
   }
 
   public getTrafficPercent(): number {

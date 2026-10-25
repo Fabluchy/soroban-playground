@@ -16,7 +16,7 @@ export const SYNC_STATUS = {
  * Returns a batch report with per-entry results.
  *
  * @param {Array<{table: string, record_id: string, operation: string, payload: object, client_timestamp: string}>} entries
- * @returns {{ applied: number, skipped: number, errors: Array<{index: number, record_id: string, reason: string}> }}
+ * @returns {{applied: number, skipped: number, errors: Array<{index: number, record_id: string, reason: string}>}}
  */
 export async function processSyncBatch(entries) {
   if (!Array.isArray(entries) || entries.length === 0) {

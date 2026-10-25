@@ -6,6 +6,7 @@ No setup required. Write Rust smart contracts directly in your browser.
 > [!NOTE]
 > **🚧 Project Status:** The Soroban Playground Frontend, Backend, and Core Smart Contracts are successfully deployed to the Stellar Testnet and are fully operational! However, the project is still under active development. We have established this strong foundation with the goal of polishing and completing the entire ecosystem for the next wave.
 >
+
 > **Roadmap for the Next Wave:**
 >
 > - **Complete Test Coverage:** Finalize our comprehensive end-to-end test suites, specifically targeting Synthetic Assets and complex DeFi contract scenarios.

@@ -28,7 +28,9 @@ export class MtlsCertManager {
       this.serverCert = fs.readFileSync(this.certPathOptions.serverCertPath);
       this.serverKey = fs.readFileSync(this.certPathOptions.serverKeyPath);
     } catch (err: any) {
-      throw new Error(`[mTLS] Failed to load certificates from disk: ${err.message}`);
+      throw new Error(
+        `[mTLS] Failed to load certificates from disk: ${err.message}`
+      );
     }
   }
 
@@ -42,14 +44,17 @@ export class MtlsCertManager {
       key: this.serverKey,
       requestCert: true,
       rejectUnauthorized: true, // Strictly reject unauthorized or missing client certs
-      minVersion: 'TLSv1.3',    // Enforce modern secure TLS version
+      minVersion: 'TLSv1.3', // Enforce modern secure TLS version
     };
   }
 
   /**
    * Extract client microservice identity from Subject Alternative Name (SAN) or Common Name (CN)
    */
-  public static extractClientIdentity(socket: TLSSocket): { serviceName: string; isValid: boolean } {
+  public static extractClientIdentity(socket: TLSSocket): {
+    serviceName: string;
+    isValid: boolean;
+  } {
     if (!socket.authorized) {
       return { serviceName: '', isValid: false };
     }

@@ -184,7 +184,7 @@ export default function QuadraticVotingPage() {
   }, [contractId, walletAddress]);
 
   return (
-    <main className="min-h-screen bg-slate-950 p-4 md:p-8">
+    <section className="min-h-screen bg-slate-950 p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Contract ID input */}
         <div className="flex gap-2">
@@ -234,6 +234,6 @@ export default function QuadraticVotingPage() {
           onUnpause={handleUnpause}
         />
       </div>
-    </main>
+    </section>
   );
 }

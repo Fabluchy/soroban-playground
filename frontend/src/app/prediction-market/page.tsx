@@ -222,7 +222,7 @@ export default function PredictionMarketPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <section className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Page header */}
         <header>
@@ -334,6 +334,6 @@ export default function PredictionMarketPage() {
           onCalculatePayout={handleCalculatePayout}
         />
       </div>
-    </main>
+    </section>
   );
 }

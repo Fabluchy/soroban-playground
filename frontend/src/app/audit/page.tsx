@@ -155,7 +155,7 @@ export default function AuditDashboardPage() {
                   {stat.label}
                 </span>
               </div>
-              <h3 className="text-2xl font-bold">{stat.value}</h3>
+              <h2 className="text-2xl font-bold">{stat.value}</h2>
             </div>
           ))}
         </div>
@@ -175,10 +175,10 @@ export default function AuditDashboardPage() {
           <div className="space-y-6">
             <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-6 space-y-6">
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
                   <Activity size={14} className="text-violet-400" />
                   Chain Statistics
-                </h4>
+                </h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
                   Hash chains prevent history rewriting by making every entry
                   dependent on the entire history before it.
@@ -218,10 +218,10 @@ export default function AuditDashboardPage() {
             </div>
 
             <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 space-y-3">
-              <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2">
                 <AlertTriangle size={14} />
                 Tamper Detection
-              </h4>
+              </h3>
               <p className="text-[10px] text-slate-400 leading-relaxed">
                 If any log entry is modified, the hash chain will break, causing
                 all subsequent hashes to become invalid. The verification engine

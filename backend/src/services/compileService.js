@@ -14,6 +14,10 @@ import {
 import { alertManager } from '../utils/alerting.js';
 import config from '../config/index.js';
 import redisService from './redisService.js';
+// BE-11: content-addressed compilation cache (S3 + Redis + LRU tiers)
+import compilationCacheService, {
+  computeCacheKey,
+} from './compiler/cacheService.js';
 
 // Cache integration using the shared redisService singleton.
 const COMPILE_CACHE_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -481,17 +485,67 @@ const workerPool = new WorkerPool(MAX_WORKERS);
 export async function compile(job) {
   validateCompileJob(job);
   const hash = hashSource(job.code, job.dependencies || {});
+
+  // ── BE-11: content-addressed cache lookup (S3 + Redis + LRU) ──────────────
+  try {
+    const cacheResult = await compilationCacheService.lookup(hash);
+    if (cacheResult.hit) {
+      cacheHits += 1;
+      // Return a result shaped like a normal compile output so the route
+      // handler does not need to change.
+      return {
+        success: true,
+        cached: true,
+        hash: cacheResult.hash,
+        sizeBytes: cacheResult.sizeBytes,
+        durationMs: 0,
+        diagnostics: cacheResult.diagnostics,
+        logs: [`Cache hit: returned pre-compiled artifact ${cacheResult.hash}`],
+        artifact: {
+          name: `${cacheResult.hash}.wasm`,
+          sizeBytes: cacheResult.sizeBytes,
+          path: `cache/${cacheResult.hash}.wasm`,
+        },
+      };
+    }
+  } catch (err) {
+    // Cache lookup failure is non-fatal; fall through to compilation
+    console.warn('[compileService] cacheService.lookup error:', err?.message);
+  }
+
+  // ── Legacy in-memory / Redis lookup (backward compat) ─────────────────────
   const cached = await loadCacheEntryFromCache(hash);
   if (cached) {
     cacheHits += 1;
     return { ...cached, cached: true };
   }
+
   const cargoToml = job.cargoToml || buildCargoToml(job.dependencies || {});
   const result = await executeUnderLock(hash, job.requestId, async () => {
     return workerPool.run({ ...job, cargoToml, hash, cacheRoot: CACHE_ROOT });
   });
+
   if (result?.success) {
     await recordArtifact({ ...result, hash });
+
+    // ── BE-11: store the artifact in the content-addressed cache ────────────
+    try {
+      // Read the WASM file from disk and persist to all cache tiers.
+      const wasmPath = result.artifact?.path;
+      if (wasmPath) {
+        const wasmBytes = await fs.readFile(wasmPath).catch(() => null);
+        if (wasmBytes) {
+          await compilationCacheService.store(
+            hash,
+            wasmBytes,
+            result.diagnostics || []
+          );
+        }
+      }
+    } catch (err) {
+      // Cache store failure is non-fatal
+      console.warn('[compileService] cacheService.store error:', err?.message);
+    }
   }
 
   return result;
@@ -592,7 +646,7 @@ export async function shutdown() {
   await workerPool.shutdown();
 }
 
-export { workerPool, queueBus as compileProgressBus };
+export { workerPool, queueBus as compileProgressBus, compilationCacheService };
 
 export const compileService = {
   validateCompileJob,
@@ -606,4 +660,5 @@ export const compileService = {
   init,
   initializeCompileService,
   shutdown,
+  compilationCacheService,
 };

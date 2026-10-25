@@ -97,7 +97,8 @@ export class SSOProvider {
     const acsUrl = config.acsUrl;
     const sloUrl = config.sloUrl;
     const timestamp = new Date().toISOString();
-    const certFingerprint = config.certificateFingerprint || this.generateCertificateFingerprint();
+    const certFingerprint =
+      config.certificateFingerprint || this.generateCertificateFingerprint();
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="${entityId}">
@@ -255,7 +256,8 @@ export class SSOProvider {
         return { errors };
       }
 
-      const { codeVerifier, redirectUri: storedRedirectUri } = JSON.parse(stateData);
+      const { codeVerifier, redirectUri: storedRedirectUri } =
+        JSON.parse(stateData);
       if (storedRedirectUri !== redirectUri) {
         errors.push('Redirect URI mismatch');
         return { errors };
@@ -303,17 +305,16 @@ export class SSOProvider {
     assertion: SAMLAssertion | OIDCToken,
     roleMapping: WorkspaceRoleMapping
   ): Promise<UserIdentityClaim> {
-    const email = assertion instanceof SAMLAssertion
-      ? assertion.attributes.email?.[0]
-      : ''; // Would extract from ID token
+    const email =
+      assertion instanceof SAMLAssertion ? assertion.attributes.email?.[0] : ''; // Would extract from ID token
 
-    const name = assertion instanceof SAMLAssertion
-      ? assertion.attributes.name?.[0]
-      : '';
+    const name =
+      assertion instanceof SAMLAssertion ? assertion.attributes.name?.[0] : '';
 
-    const groups = assertion instanceof SAMLAssertion
-      ? assertion.attributes.groups || []
-      : [];
+    const groups =
+      assertion instanceof SAMLAssertion
+        ? assertion.attributes.groups || []
+        : [];
 
     // Map enterprise groups to workspace roles
     const mappedRoles: string[] = [roleMapping.defaultRole];
@@ -338,11 +339,7 @@ export class SSOProvider {
   async storeSSOConfig(domain: string, config: SSOConfig): Promise<void> {
     const key = `sso_config:${domain}`;
     config.updatedAt = Date.now();
-    await redisService.set(
-      key,
-      JSON.stringify(config),
-      SSO_CONFIG_TTL
-    );
+    await redisService.set(key, JSON.stringify(config), SSO_CONFIG_TTL);
   }
 
   /**
@@ -370,7 +367,10 @@ export class SSOProvider {
   /**
    * Verify domain ownership via DNS TXT record
    */
-  async verifyDomainOwnership(domain: string, dnsRecord: string): Promise<boolean> {
+  async verifyDomainOwnership(
+    domain: string,
+    dnsRecord: string
+  ): Promise<boolean> {
     // In production, check DNS TXT records
     // Example: _soroban-sso-verify.example.com TXT "verification_token"
     const expectedPattern = `_soroban-sso-verify.${domain}`;
@@ -402,7 +402,10 @@ export class SSOProvider {
   /**
    * Get SSO audit trail
    */
-  async getAuditTrail(domain: string, limit: number = 100): Promise<SSOAuditLogEntry[]> {
+  async getAuditTrail(
+    domain: string,
+    limit: number = 100
+  ): Promise<SSOAuditLogEntry[]> {
     const key = `audit:sso:${domain}`;
     const entries = await redisService.lrange(key, 0, limit - 1);
     return entries.map((entry) => JSON.parse(entry));

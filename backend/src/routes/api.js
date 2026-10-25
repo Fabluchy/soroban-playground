@@ -14,6 +14,8 @@ import v2Deploy from './v2/deploy.js';
 import v2Invoke from './v2/invoke.js';
 import v2Identity from './v2/identity.js';
 import v2Lottery from './v2/lottery.js';
+import v2FeeEstimate from './v2/feeEstimate.js';
+import v2StaticAnalysis from './v2/staticAnalysis.js';
 import eventsRouter from './events.js';
 import patentsRouter from './patents.js';
 import tokenBurnRouter from './tokenBurn.js';
@@ -89,6 +91,9 @@ v2Router.use('/invoke', v2Invoke);
 v2Router.use('/identity', v2Identity);
 v2Router.use('/simulate', v1Simulate);
 v2Router.use('/lottery', v2Lottery);
+v2Router.use('/fee-estimate', v2FeeEstimate);
+v2Router.use('/analyze/static', v2StaticAnalysis);
+v2Router.use('/static-analysis', v2StaticAnalysis);
 
 const versionRouters = {
   v1: v1Router,
@@ -102,6 +107,9 @@ const headerVersionedPaths = [
   '/identity',
   '/simulate',
   '/lottery',
+  '/fee-estimate',
+  '/analyze/static',
+  '/static-analysis',
 ];
 
 function isHeaderVersionedPath(path) {

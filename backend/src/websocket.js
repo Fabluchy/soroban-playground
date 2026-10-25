@@ -1,4 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws';
+import { createMediaSignaling } from './services/mediaSignaling.js';
 
 import { invokeProgressBus } from './services/invokeService.js';
 import { deployProgressBus } from './services/deployService.js';
@@ -10,6 +11,9 @@ import { sharedOracleEventBus } from './services/oracle/oracleEvents.js';
 import { registerHandler } from './services/contractEventParser.js';
 
 const clients = new Set();
+const mediaSignaling = createMediaSignaling((socket, payload) =>
+  safeSend(socket, safeStringify(payload))
+);
 
 // Tracks number of active connections per IP address.
 const ipCounts = new Map();
@@ -42,6 +46,7 @@ function safeSend(socket, message) {
     }
     if (socket.releaseIp) socket.releaseIp();
     clients.delete(socket);
+    mediaSignaling.leave(socket);
   }
 }
 
@@ -251,6 +256,7 @@ export function setupWebSocketServer(httpServer) {
     socket.on('message', (data) => {
       try {
         const payload = JSON.parse(data);
+        if (mediaSignaling.handle(socket, payload)) return;
         if (
           payload.type === 'collaboration-join' ||
           payload.type === 'collaboration-cursor'
@@ -349,11 +355,13 @@ export function setupWebSocketServer(httpServer) {
     socket.on('error', (err) => {
       console.error('WS client error:', err.message);
       clients.delete(socket);
+      mediaSignaling.leave(socket);
       if (socket.releaseIp) socket.releaseIp();
     });
 
     socket.on('close', () => {
       clients.delete(socket);
+      mediaSignaling.leave(socket);
       if (socket.releaseIp) socket.releaseIp();
     });
   });
@@ -391,6 +399,7 @@ export function setupWebSocketServer(httpServer) {
         if (socket.releaseIp) socket.releaseIp();
         socket.terminate();
         clients.delete(socket);
+        mediaSignaling.leave(socket);
         continue;
       }
       socket.missedPongs += 1;
@@ -401,6 +410,7 @@ export function setupWebSocketServer(httpServer) {
         if (socket.releaseIp) socket.releaseIp();
         socket.terminate();
         clients.delete(socket);
+        mediaSignaling.leave(socket);
       }
     }
   }, HEARTBEAT_INTERVAL_MS);

@@ -54,14 +54,19 @@ export const DLQ_ALERT_THRESHOLD = 50;
 
 export class DlqInspector {
   private persistentRecords: Map<string, DLQJobRecord> = new Map();
-  private managedQueues: Map<string, { primary: Queue; dlq: Queue }> = new Map();
+  private managedQueues: Map<string, { primary: Queue; dlq: Queue }> =
+    new Map();
   private alertThreshold: number;
 
   constructor(alertThreshold: number = DLQ_ALERT_THRESHOLD) {
     this.alertThreshold = alertThreshold;
   }
 
-  public registerQueue(queueName: string, primaryQueue?: Queue, dlqQueue?: Queue): void {
+  public registerQueue(
+    queueName: string,
+    primaryQueue?: Queue,
+    dlqQueue?: Queue
+  ): void {
     const primary = primaryQueue || createBullQueue(queueName).queue;
     const dlq = dlqQueue || createBullQueue(getDlqQueueName(queueName)).queue;
     this.managedQueues.set(queueName, { primary, dlq });
@@ -78,8 +83,8 @@ export class DlqInspector {
     const stackTrace = error?.stack
       ? error.stack.split('\n').map((line: string) => line.trim())
       : Array.isArray(job?.stacktrace)
-      ? job.stacktrace
-      : [];
+        ? job.stacktrace
+        : [];
 
     const record: DLQJobRecord = {
       id: `${queueName}:${jobId}`,
@@ -119,8 +124,16 @@ export class DlqInspector {
     const queuePair = this.managedQueues.get(queueName);
     if (queuePair?.dlq) {
       try {
-        const counts = await queuePair.dlq.getJobCounts('waiting', 'delayed', 'failed', 'paused');
-        return Object.values(counts).reduce((acc: number, val: number) => acc + val, 0);
+        const counts = await queuePair.dlq.getJobCounts(
+          'waiting',
+          'delayed',
+          'failed',
+          'paused'
+        );
+        return Object.values(counts).reduce(
+          (acc: number, val: number) => acc + val,
+          0
+        );
       } catch {
         // Fallback to in-memory records
       }
@@ -163,12 +176,16 @@ export class DlqInspector {
 
     if (options.errorType) {
       const targetType = options.errorType.toLowerCase();
-      results = results.filter((r) => r.errorType.toLowerCase().includes(targetType));
+      results = results.filter((r) =>
+        r.errorType.toLowerCase().includes(targetType)
+      );
     }
 
     if (options.startDate) {
       const startMs = new Date(options.startDate).getTime();
-      results = results.filter((r) => new Date(r.failedAt).getTime() >= startMs);
+      results = results.filter(
+        (r) => new Date(r.failedAt).getTime() >= startMs
+      );
     }
 
     if (options.endDate) {
@@ -176,7 +193,9 @@ export class DlqInspector {
       results = results.filter((r) => new Date(r.failedAt).getTime() <= endMs);
     }
 
-    results.sort((a, b) => new Date(b.failedAt).getTime() - new Date(a.failedAt).getTime());
+    results.sort(
+      (a, b) => new Date(b.failedAt).getTime() - new Date(a.failedAt).getTime()
+    );
 
     const total = results.length;
     const offset = Math.max(0, options.offset || 0);
@@ -228,7 +247,10 @@ export class DlqInspector {
           this.persistentRecords.delete(item.dlqJobId);
         }
       } catch (err: any) {
-        result.errors.push({ jobId: 'bulk', error: err?.message || String(err) });
+        result.errors.push({
+          jobId: 'bulk',
+          error: err?.message || String(err),
+        });
       }
     } else {
       for (const record of targetRecords) {
@@ -238,7 +260,10 @@ export class DlqInspector {
           this.persistentRecords.delete(record.id);
         } catch (err: any) {
           result.failedCount += 1;
-          result.errors.push({ jobId: record.id, error: err?.message || String(err) });
+          result.errors.push({
+            jobId: record.id,
+            error: err?.message || String(err),
+          });
         }
       }
     }
@@ -305,7 +330,9 @@ export class DlqInspector {
 
 export const dlqInspector = new DlqInspector();
 
-export function createDlqInspectorRouter(inspector: DlqInspector = dlqInspector): Router {
+export function createDlqInspectorRouter(
+  inspector: DlqInspector = dlqInspector
+): Router {
   const router = express.Router();
 
   router.get('/dashboard', (_req: Request, res: Response) => {

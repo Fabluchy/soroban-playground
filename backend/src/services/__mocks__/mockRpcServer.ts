@@ -39,7 +39,10 @@ export class MockRpcEngine {
   /**
    * Configure programmatic scenario behavior for specific methods/transactions
    */
-  public setScenarioOverride(txHash: string, response: MockTransactionResponse): void {
+  public setScenarioOverride(
+    txHash: string,
+    response: MockTransactionResponse
+  ): void {
     this.scenarioOverrides.set(txHash, response);
   }
 
@@ -50,7 +53,10 @@ export class MockRpcEngine {
   /**
    * Export in-memory state snapshot for test fixture resets
    */
-  public exportSnapshot(): { ledgerSequence: number; entries: [string, string][] } {
+  public exportSnapshot(): {
+    ledgerSequence: number;
+    entries: [string, string][];
+  } {
     return {
       ledgerSequence: this.ledgerSequence,
       entries: Array.from(this.ledgerEntries.entries()),
@@ -60,7 +66,10 @@ export class MockRpcEngine {
   /**
    * Restore state from a previously exported snapshot
    */
-  public restoreSnapshot(snapshot: { ledgerSequence: number; entries: [string, string][] }): void {
+  public restoreSnapshot(snapshot: {
+    ledgerSequence: number;
+    entries: [string, string][];
+  }): void {
     this.ledgerSequence = snapshot.ledgerSequence;
     this.ledgerEntries = new Map(snapshot.entries);
   }
@@ -85,7 +94,10 @@ export class MockRpcEngine {
 
         case 'simulateTransaction':
           // Check scenario overrides
-          if (params?.transaction && this.scenarioOverrides.has(params.transaction)) {
+          if (
+            params?.transaction &&
+            this.scenarioOverrides.has(params.transaction)
+          ) {
             result = this.scenarioOverrides.get(params.transaction);
           } else {
             result = {

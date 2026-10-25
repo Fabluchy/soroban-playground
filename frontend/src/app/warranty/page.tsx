@@ -33,7 +33,7 @@ export default function WarrantyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <section className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         <header>
           <h1 className="text-2xl font-bold text-white">
@@ -109,6 +109,6 @@ export default function WarrantyPage() {
           userAddress={userAddress}
         />
       </div>
-    </main>
+    </section>
   );
 }

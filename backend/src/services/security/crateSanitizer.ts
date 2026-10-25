@@ -26,7 +26,9 @@ export class CrateSanitizerService {
   /**
    * Securely inspect and sanitize an uploaded crate archive (.zip)
    */
-  public static async sanitizeZipBuffer(fileBuffer: Buffer): Promise<SanitizationResult> {
+  public static async sanitizeZipBuffer(
+    fileBuffer: Buffer
+  ): Promise<SanitizationResult> {
     try {
       const zip = new AdmZip(fileBuffer);
       const zipEntries = zip.getEntries();

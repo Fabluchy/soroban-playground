@@ -62,6 +62,8 @@ describe('SlowQueryAnalyzerDaemon (#1788)', () => {
     mockPool.connect.mockResolvedValue(mockClient);
 
     await daemon.reindexTableConcurrently('public.contracts');
-    expect(mockClient.query).toHaveBeenCalledWith('REINDEX TABLE CONCURRENTLY public.contracts;');
+    expect(mockClient.query).toHaveBeenCalledWith(
+      'REINDEX TABLE CONCURRENTLY public.contracts;'
+    );
   });
 });

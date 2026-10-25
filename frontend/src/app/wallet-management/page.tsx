@@ -7,12 +7,13 @@ import WalletConnectionWizard from "@/components/WalletConnectionWizard";
 import AccountSwitcher from "@/components/AccountSwitcher";
 import { useWallet } from "@/components/providers/WalletProvider";
 import AssetBalancesPanel from "@/components/AssetBalancesPanel";
+import AllowanceDashboard from "@/components/Security/AllowanceDashboard";
 
 export default function WalletManagementPage() {
   const { status, activeWallet } = useWallet();
 
   return (
-    <div className="min-h-screen bg-[#060c18] text-slate-100 p-6 lg:p-10">
+    <div className="min-h-screen bg-background text-slate-100 p-6 lg:p-10">
       <div className="max-w-5xl mx-auto space-y-10">
         {/* Header */}
         <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -64,6 +65,8 @@ export default function WalletManagementPage() {
             </section>
 
             <AssetBalancesPanel />
+
+            <AllowanceDashboard />
 
             <section className="space-y-4">
               <div className="flex items-center gap-3">

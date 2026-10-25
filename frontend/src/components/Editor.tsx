@@ -45,7 +45,8 @@ export default function Editor({
   });
 
   return (
-    <div className="relative h-[500px] w-full rounded-xl overflow-hidden border border-gray-800 bg-[#1e1e1e] shadow-2xl flex flex-col">
+    <div id="workspace-editor" role="region" aria-label="Contract editor" aria-describedby="editor-keyboard-help" tabIndex={-1} className="relative h-[500px] w-full rounded-xl overflow-hidden border border-gray-800 bg-[#1e1e1e] shadow-2xl flex flex-col">
+      <p id="editor-keyboard-help" className="sr-only">Use the editor command Toggle Tab Key Moves Focus to switch Tab between indentation and leaving the editor.</p>
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-gray-900/90 text-xs text-gray-400">
         <span className="font-mono text-[11px] font-semibold tracking-wide text-slate-300">
           lib.rs (Soroban Smart Contract)

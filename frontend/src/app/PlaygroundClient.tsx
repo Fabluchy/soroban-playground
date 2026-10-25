@@ -8,7 +8,11 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useCompileStore } from "@/state/compileStore";
+import {
+  SPOTLIGHT_COMPILE_REQUEST_EVENT,
+  SPOTLIGHT_DEPLOY_REQUEST_EVENT,
+  useCompileStore,
+} from "@/state/compileStore";
 import { formatRustInWorker } from "@/lib/rustfmtClient";
 import type { RustFormatDiagnostic } from "@/lib/rustfmtDiagnostics";
 import {
@@ -16,6 +20,7 @@ import {
   BookOpen,
   ChevronRight,
   Code2,
+  GitCompare,
   Globe,
   LoaderCircle,
   Orbit,
@@ -54,7 +59,17 @@ const TransactionCallGraphPanel = dynamic(
 import Console from "@/components/Console";
 import { ConsoleAndEventsDrawer } from "@/components/ConsoleAndEventsDrawer";
 import DeployPanel from "@/components/DeployPanel";
+import {
+  PreflightChecklist,
+  type DeploymentPlan,
+} from "@/components/Deploy/PreflightChecklist";
+import { MediaCollaborationPanel } from "@/collaboration/MediaCollaborationPanel";
+import { announceToScreenReader } from "@/lib/accessibility";
+import BranchConflictResolver from "@/components/Git/BranchConflictResolver";
+import DeploymentShaderCanvas from "@/components/Celebration/DeploymentShaderCanvas";
+import ThreeWayDiffViewer from "@/components/Diff/ThreeWayDiffViewer";
 import CallPanel from "@/components/CallPanel";
+import StateMachineModeler from "@/components/Visualizer/StateMachineModeler";
 import StorageViewer from "@/components/StorageViewer";
 import TransactionCallGraph from "@/components/TransactionCallGraph";
 import StorageTimeline from "@/components/StorageTimeline";
@@ -144,6 +159,7 @@ type CompileResponse = {
   logs?: string[];
   artifact?: {
     name: string;
+    path?: string;
     sizeBytes: number;
     createdAt?: string;
   };
@@ -321,8 +337,9 @@ export default function Home() {
       `Loaded template "${template.name}" into the editor.`,
     ]);
   }, []);
-  const [formatDiagnostics, setFormatDiagnostics] =
-    useState<RustFormatDiagnostic[]>([]);
+  const [formatDiagnostics, setFormatDiagnostics] = useState<
+    RustFormatDiagnostic[]
+  >([]);
   const [isFormatting, setIsFormatting] = useState(false);
   const [logs, setLogs] = useState<string[]>([
     `Soroban Playground ready.`,
@@ -392,6 +409,12 @@ export default function Home() {
     artifacts: 0,
   });
   const [contractId, setContractId] = useState<string>();
+  const [deploymentCelebration, setDeploymentCelebration] = useState<{
+    contractId: string;
+    network: string;
+    key: number;
+  } | null>(null);
+  const [isDiffViewerOpen, setIsDiffViewerOpen] = useState(false);
   const [storage, setStorage] = useState<LedgerState>({});
   const [storageContextLabel, setStorageContextLabel] = useState<string>(
     "Latest contract snapshot",
@@ -409,10 +432,17 @@ export default function Home() {
   const [selectedGraphNodeId, setSelectedGraphNodeId] = useState<string>();
   const [lastArtifactName, setLastArtifactName] =
     useState<string>("contract.wasm");
+  const [deploymentPlan, setDeploymentPlan] = useState<DeploymentPlan | null>(
+    null,
+  );
   const [lastDeployMessage, setLastDeployMessage] = useState<string>();
   const [contractAbi, setContractAbi] = useState<
     Array<{ name: string; inputs?: Array<{ name: string; type: string }> }>
   >([]);
+  const [lifecyclePrefill, setLifecyclePrefill] = useState<{
+    functionName: string;
+    args: Record<string, unknown>;
+  } | null>(null);
 
   const activeSnapshot = useMemo(
     () =>
@@ -475,9 +505,12 @@ export default function Home() {
   const [govVotingPower, setGovVotingPower] = useState(0);
   const [isGovLoading, setIsGovLoading] = useState(false);
 
-  const appendLog = useCallback((msg: string) => {
-    setLogs((prev) => [...prev, msg]);
-  }, []);
+  const appendLog = useCallback(
+    (msg: string) => {
+      setLogs((prev) => [...prev, msg]);
+    },
+    [setLogs],
+  );
 
   useEffect(() => {
     setContractAbi(parseContractAbiFromSource(code));
@@ -511,7 +544,7 @@ export default function Home() {
       }
 
       throw new Error(
-        `Health check failed with ${response ? response.status : "network error"}`
+        `Health check failed with ${response ? response.status : "network error"}`,
       );
     } catch (error) {
       setHealthState("offline");
@@ -658,6 +691,7 @@ export default function Home() {
   }
 
   const handleCompile = async () => {
+    setDeploymentPlan(null);
     setIsCompiling(true);
     setCompileError(null);
     setCompileSummary(undefined);
@@ -669,6 +703,7 @@ export default function Home() {
     setTransactionGraph({ nodes: [], edges: [] });
     setSelectedGraphNodeId(undefined);
     appendLog("[compile] Sending source to backend...");
+    announceToScreenReader("Compilation started.");
 
     // Start compilation in Zustand store
     useCompileStore.getState().startCompile();
@@ -680,13 +715,18 @@ export default function Home() {
       const compileLogs = payload.logs ?? [];
 
       setHasCompiled(true);
-      setLastArtifactName(payload.artifact?.name ?? "contract.wasm");
+      setLastArtifactName(
+        payload.artifact?.path ?? payload.artifact?.name ?? "contract.wasm",
+      );
       const summaryMsg = `${payload.message} · ${payload.artifact?.name ?? "artifact"} · ${
         payload.artifact?.sizeBytes
           ? `${(payload.artifact.sizeBytes / 1024).toFixed(1)} KB`
           : "size unavailable"
       } · ${payload.cached ? "cache hit" : "fresh build"}`;
       setCompileSummary(summaryMsg);
+      announceToScreenReader(
+        "Compilation succeeded. Contract is ready to deploy.",
+      );
 
       // Complete compilation in Zustand store
       useCompileStore.getState().successCompile(summaryMsg);
@@ -710,6 +750,7 @@ export default function Home() {
     } catch (error) {
       const message = formatApiError(error);
       setCompileError(message);
+      announceToScreenReader(`Compilation failed: ${message}`, "assertive");
       appendLog(`[error] Compile failed: ${message}`);
 
       // Fail compilation in Zustand store
@@ -720,9 +761,18 @@ export default function Home() {
   };
 
   const handleDeploy = async () => {
+    if (
+      !deploymentPlan ||
+      deploymentPlan.wasmPath !== lastArtifactName ||
+      Date.now() - deploymentPlan.checkedAt >= 30000
+    ) {
+      appendLog("[warn] Run valid pre-flight checks before deploying.");
+      return;
+    }
     setIsDeploying(true);
     setLastDeployMessage(undefined);
-    appendLog("[deploy] Requesting testnet deployment...");
+    appendLog(`[deploy] Requesting ${deploymentPlan.network} deployment...`);
+    announceToScreenReader(`Deployment to ${deploymentPlan.network} started.`);
 
     try {
       const payload = await requestJson<{
@@ -738,10 +788,15 @@ export default function Home() {
       }>("/api/deploy", {
         wasmPath: lastArtifactName,
         contractName: "hello_contract",
-        network: "testnet",
+        network: deploymentPlan.network,
+        sourceAccount: deploymentPlan.sourceAccount,
+        preflight: deploymentPlan.preflight,
       });
 
       setContractId(payload.contractId);
+      announceToScreenReader(
+        `Deployment succeeded on ${payload.network}. Contract address: ${payload.contractId}`,
+      );
       setContractAbi((prev) =>
         prev.length > 0 ? prev : parseContractAbiFromSource(code),
       );
@@ -766,12 +821,51 @@ export default function Home() {
 
       appendLog(`[deploy] ${payload.message}`);
       appendLog(`[deploy] Contract ID: ${payload.contractId}`);
+      setDeploymentCelebration({
+        contractId: payload.contractId,
+        network: payload.network || "testnet",
+        key: Date.now(),
+      });
     } catch (error) {
       appendLog(`[error] Deploy failed: ${formatApiError(error)}`);
+      announceToScreenReader(
+        `Deployment failed: ${formatApiError(error)}`,
+        "assertive",
+      );
     } finally {
       setIsDeploying(false);
     }
   };
+
+  /*
+   * Issue #1725 — the spotlight palette is mounted once in the root layout
+   * and cannot call `handleCompile` / `handleDeploy` directly, so it signals
+   * through these DOM events. Handlers are read through refs to keep the
+   * subscription stable across renders while always invoking the latest
+   * closures (which capture the current `code`, `deploymentPlan`, …).
+   */
+  const compileRequestRef = useRef(handleCompile);
+  compileRequestRef.current = handleCompile;
+  const deployRequestRef = useRef(handleDeploy);
+  deployRequestRef.current = handleDeploy;
+
+  useEffect(() => {
+    const onCompileRequest = () => {
+      void compileRequestRef.current();
+    };
+    const onDeployRequest = () => {
+      void deployRequestRef.current();
+    };
+    window.addEventListener(SPOTLIGHT_COMPILE_REQUEST_EVENT, onCompileRequest);
+    window.addEventListener(SPOTLIGHT_DEPLOY_REQUEST_EVENT, onDeployRequest);
+    return () => {
+      window.removeEventListener(
+        SPOTLIGHT_COMPILE_REQUEST_EVENT,
+        onCompileRequest,
+      );
+      window.removeEventListener(SPOTLIGHT_DEPLOY_REQUEST_EVENT, onDeployRequest);
+    };
+  }, []);
 
   const handleBatchDeploy = async () => {
     let contracts: Array<Record<string, unknown>>;
@@ -2401,7 +2495,9 @@ export default function Home() {
       const result = await formatRustInWorker(source);
       if ("diagnostics" in result) {
         setFormatDiagnostics(result.diagnostics);
-        appendLog(`[editor] rustfmt found ${result.diagnostics.length} syntax error(s)`);
+        appendLog(
+          `[editor] rustfmt found ${result.diagnostics.length} syntax error(s)`,
+        );
       } else {
         setFormatDiagnostics([]);
         setCode(result.formatted);
@@ -2416,7 +2512,32 @@ export default function Home() {
 
   return (
     <div className="min-h-screen px-4 py-4 text-slate-100 sm:px-6 lg:px-8">
+      {deploymentCelebration && (
+        <DeploymentShaderCanvas
+          key={deploymentCelebration.key}
+          contractId={deploymentCelebration.contractId}
+          network={deploymentCelebration.network}
+          onClose={() => setDeploymentCelebration(null)}
+        />
+      )}
+      {isDiffViewerOpen && contractId && (
+        <div className="fixed inset-0 z-[95] bg-slate-950/85 p-4 backdrop-blur-sm">
+          <div className="mx-auto h-full max-w-[1500px]">
+            <ThreeWayDiffViewer
+              contractId={contractId}
+              apiBaseUrl={DEFAULT_API_BASE_URL}
+              localCode={code}
+              mainCode={DEFAULT_CODE}
+              onLocalCodeChange={setCode}
+              onClose={() => setIsDiffViewerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1600px] flex-col overflow-hidden rounded-[28px] border border-white/8 bg-slate-950/60 shadow-[0_30px_120px_rgba(2,8,23,0.7)] backdrop-blur">
+        <MediaCollaborationPanel
+          wsUrl={`${DEFAULT_API_BASE_URL.replace(/^http/, "ws")}/ws`}
+        />
         <header className="border-b border-white/8 bg-slate-950/70 px-6 py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
@@ -2505,7 +2626,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="flex-1">
+        <section aria-label="Playground workspace" className="flex-1">
           <MobileEditor
             editor={
               <section className="flex min-h-[560px] flex-col border-b border-white/8 p-4 lg:border-b-0 lg:border-r">
@@ -2568,6 +2689,16 @@ export default function Home() {
             output={
               <aside className="flex flex-col gap-4 bg-slate-950/40 p-4">
                 <DeployPanel
+                  preflight={
+                    <PreflightChecklist
+                      apiBaseUrl={DEFAULT_API_BASE_URL}
+                      wasmPath={lastArtifactName}
+                      enabled={hasCompiled && !isCompiling && !isDeploying}
+                      onPlanChange={setDeploymentPlan}
+                    />
+                  }
+                  deploymentAllowed={Boolean(deploymentPlan)}
+                  networkLabel={deploymentPlan?.network || "selected network"}
                   onCompile={handleCompile}
                   onDeploy={handleDeploy}
                   isCompiling={isCompiling}
@@ -2577,6 +2708,16 @@ export default function Home() {
                   compileError={compileError}
                   contractId={contractId}
                 />
+                <BranchConflictResolver code={code} onApplyCode={setCode} />
+                <button
+                  type="button"
+                  onClick={() => setIsDiffViewerOpen(true)}
+                  disabled={!contractId}
+                  className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/10 px-4 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <GitCompare size={15} />
+                  Semantic diff
+                </button>
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
@@ -2631,6 +2772,27 @@ export default function Home() {
                   isInvoking={isInvoking}
                   contractId={contractId}
                   abi={contractAbi}
+                  prefill={lifecyclePrefill}
+                />
+                <StateMachineModeler
+                  sourceCode={code}
+                  abi={contractAbi}
+                  contractId={contractId}
+                  currentState={
+                    typeof storage.state === "string"
+                      ? storage.state
+                      : typeof storage.lifecycle === "string"
+                        ? storage.lifecycle
+                        : typeof storage.status === "string"
+                          ? storage.status
+                          : null
+                  }
+                  onTransitionSelected={(transition, args) => {
+                    setLifecyclePrefill({
+                      functionName: transition.functionName,
+                      args,
+                    });
+                  }}
                 />
                 <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
                   <div className="mb-3 flex items-center justify-between">
@@ -2645,6 +2807,7 @@ export default function Home() {
                     </button>
                   </div>
                   <textarea
+                    aria-label="Batch compile contracts JSON"
                     value={batchCompileRaw}
                     onChange={(e) => setBatchCompileRaw(e.target.value)}
                     className="h-44 w-full rounded-xl border border-white/10 bg-slate-950/70 p-3 font-mono text-[11px] text-slate-200 outline-none"
@@ -2685,6 +2848,7 @@ export default function Home() {
                     </button>
                   </div>
                   <textarea
+                    aria-label="Batch deployment contracts JSON"
                     value={batchContractsRaw}
                     onChange={(e) => setBatchContractsRaw(e.target.value)}
                     className="h-44 w-full rounded-xl border border-white/10 bg-slate-950/70 p-3 font-mono text-[11px] text-slate-200 outline-none"
@@ -2896,7 +3060,7 @@ export default function Home() {
               </aside>
             }
           />
-        </main>
+        </section>
       </div>
     </div>
   );

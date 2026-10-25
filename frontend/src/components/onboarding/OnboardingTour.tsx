@@ -1,8 +1,13 @@
 "use client";
 
+import { useModalAccessibility } from "@/accessibility/useModalAccessibility";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, RotateCcw, X } from "lucide-react";
-import { ONBOARDING_STEPS, ONBOARDING_STORAGE_KEY, type OnboardingStep } from "./onboardingSteps";
+import {
+  ONBOARDING_STEPS,
+  ONBOARDING_STORAGE_KEY,
+  type OnboardingStep,
+} from "./onboardingSteps";
 
 interface TourProgress {
   completed: boolean;
@@ -10,7 +15,11 @@ interface TourProgress {
   step: number;
 }
 
-const DEFAULT_PROGRESS: TourProgress = { completed: false, dismissed: false, step: 0 };
+const DEFAULT_PROGRESS: TourProgress = {
+  completed: false,
+  dismissed: false,
+  step: 0,
+};
 const HIGHLIGHT_PADDING = 8;
 const CARD_WIDTH = 360;
 
@@ -33,7 +42,10 @@ function readProgress(): TourProgress {
 function writeProgress(progress: TourProgress) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
+    window.localStorage.setItem(
+      ONBOARDING_STORAGE_KEY,
+      JSON.stringify(progress),
+    );
   } catch {
     // Ignore storage failures (private mode, blocked cookies, ...).
   }
@@ -99,7 +111,8 @@ export default function OnboardingTour() {
   const [hydrated, setHydrated] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const step: OnboardingStep = ONBOARDING_STEPS[stepIndex] ?? ONBOARDING_STEPS[0];
+  const step: OnboardingStep =
+    ONBOARDING_STEPS[stepIndex] ?? ONBOARDING_STEPS[0];
   const isLast = stepIndex >= ONBOARDING_STEPS.length - 1;
 
   const persist = useCallback((next: TourProgress) => writeProgress(next), []);
@@ -122,6 +135,8 @@ export default function OnboardingTour() {
     },
     [persist],
   );
+
+  useModalAccessibility(cardRef, isOpen, () => finish(false));
 
   // First-visit auto start.
   useEffect(() => {
@@ -169,6 +184,7 @@ export default function OnboardingTour() {
         finish(false);
         return;
       }
+      if (event.target !== cardRef.current) return;
       if (event.key === "ArrowRight" || event.key === "Enter") {
         event.preventDefault();
         if (isLast) finish(true);
@@ -196,8 +212,8 @@ export default function OnboardingTour() {
           setRect(null);
           setIsOpen(true);
         }}
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-teal-500/30 bg-slate-950/90 px-4 py-2.5 text-xs font-semibold text-teal-300 shadow-lg backdrop-blur transition hover:border-teal-400/60 hover:text-teal-200"
-        aria-label="Restart the playground tour"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-teal-500/30 bg-slate-950/90 px-4 py-2.5 text-xs font-semibold text-teal-200 shadow-lg backdrop-blur transition hover:border-teal-400/60 hover:text-teal-200"
+        aria-label="Replay tour: restart the playground tour"
       >
         <RotateCcw size={14} />
         Replay tour
@@ -215,7 +231,12 @@ export default function OnboardingTour() {
     : undefined;
 
   return (
-    <div className="fixed inset-0 z-[95]" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div
+      className="fixed inset-0 z-[95]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+    >
       {/* Dimmed backdrop */}
       <div
         className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px]"
@@ -270,8 +291,14 @@ export default function OnboardingTour() {
 
         <ul className="mt-3 space-y-2">
           {step.details.map((detail) => (
-            <li key={detail} className="flex gap-2 text-xs leading-5 text-slate-400">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-teal-400" aria-hidden="true" />
+            <li
+              key={detail}
+              className="flex gap-2 text-xs leading-5 text-slate-400"
+            >
+              <span
+                className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-teal-400"
+                aria-hidden="true"
+              />
               {detail}
             </li>
           ))}
@@ -281,7 +308,9 @@ export default function OnboardingTour() {
         <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
           <div
             className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-400 transition-all duration-300"
-            style={{ width: `${((stepIndex + 1) / ONBOARDING_STEPS.length) * 100}%` }}
+            style={{
+              width: `${((stepIndex + 1) / ONBOARDING_STEPS.length) * 100}%`,
+            }}
             role="progressbar"
             aria-valuenow={stepIndex + 1}
             aria-valuemin={1}
@@ -333,7 +362,9 @@ export default function OnboardingTour() {
               aria-label={`Go to step ${index + 1}: ${item.title}`}
               aria-current={index === stepIndex ? "step" : undefined}
               className={`h-1.5 rounded-full transition-all ${
-                index === stepIndex ? "w-6 bg-teal-400" : "w-1.5 bg-slate-600 hover:bg-slate-500"
+                index === stepIndex
+                  ? "w-6 bg-teal-400"
+                  : "w-1.5 bg-slate-600 hover:bg-slate-500"
               }`}
             />
           ))}

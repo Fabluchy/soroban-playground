@@ -24,9 +24,9 @@ export default function BountyCard({
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 bg-[#1c1b1c]/60 backdrop-blur-md border border-white/10 rounded-lg hover:bg-[#201f20]/80 transition-all duration-300">
       <div className="flex flex-col gap-2">
-        <h4 className="font-space-grotesk text-xl font-medium text-[#e5e2e3]">
+        <h3 className="font-space-grotesk text-xl font-medium text-[#e5e2e3]">
           {title}
-        </h4>
+        </h3>
         <div className="flex items-center gap-3">
           <span
             className={`px-3 py-1 rounded-full text-xs font-bold border ${severityColors[severity]} bg-black/40 font-inter tracking-widest uppercase`}

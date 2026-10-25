@@ -19,7 +19,7 @@ dependencies = [
 name = "account-abstraction"
 version = "0.1.0"
 dependencies = [
- "soroban-sdk 22.0.11",
+ "soroban-sdk 26.1.1",
 ]
 
 [[package]]
@@ -1105,6 +1105,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
+name = "bundle-executor"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1152,8 +1159,6 @@ dependencies = [
 name = "carbon-credit-oracle"
 version = "0.1.0"
 dependencies = [
- "serde",
- "serde_json",
  "soroban-sdk 21.7.7",
 ]
 
@@ -1224,6 +1229,13 @@ dependencies = [
 
 [[package]]
 name = "cloud-storage"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "collateral-swap"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
@@ -1377,6 +1389,13 @@ name = "crossbeam-utils"
 version = "0.8.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61803da095bee82a81bb1a452ecc25d3b2f1416d1897eb86430c6159ef717c17"
+
+[[package]]
+name = "crowdfunding-launchpad"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
 
 [[package]]
 name = "crypto-bigint"
@@ -2965,6 +2984,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "micro-lending"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "migration-utils"
 version = "0.1.0"
 dependencies = [
@@ -3063,6 +3089,13 @@ dependencies = [
 
 [[package]]
 name = "nft-marketplace"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "nft-rental"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
@@ -3453,6 +3486,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "portfolio-index"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "potential_utf"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3558,6 +3598,13 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
+]
+
+[[package]]
+name = "quadratic-grants"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 22.0.11",
 ]
 
 [[package]]
@@ -3787,6 +3834,13 @@ name = "royalty"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "royalty-splitter"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 22.0.11",
 ]
 
 [[package]]
@@ -4295,6 +4349,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "soroban-carbon-credits"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "soroban-ccip-bridge"
 version = "0.1.0"
 dependencies = [
@@ -4610,6 +4671,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "soroban-gas-sponsor-tank"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "soroban-governance"
 version = "0.1.0"
 dependencies = [
@@ -4727,6 +4795,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "soroban-mutual-insurance"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "soroban-nft-amm"
 version = "0.1.0"
 dependencies = [
@@ -4735,6 +4810,13 @@ dependencies = [
 
 [[package]]
 name = "soroban-options"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "soroban-options-vault"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
@@ -4966,10 +5048,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "soroban-soulbound-reputation"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
 name = "soroban-soulbound-token"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "soroban-sparse-merkle-registry"
+version = "0.1.0"
+dependencies = [
  "soroban-sdk 21.7.7",
 ]
 
@@ -5081,6 +5177,20 @@ dependencies = [
 
 [[package]]
 name = "soroban-staking-derivatives"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "soroban-stellar-naming-service"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "soroban-subscription-stream"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
@@ -5685,7 +5795,6 @@ dependencies = [
 name = "synthetic-assets"
 version = "0.1.0"
 dependencies = [
- "proptest",
  "soroban-sdk 21.7.7",
 ]
 
@@ -5823,6 +5932,13 @@ dependencies = [
 
 [[package]]
 name = "token-gated-access"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
+]
+
+[[package]]
+name = "token-index"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.7.7",
@@ -6247,6 +6363,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "vrf-lottery"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.7.7",
 ]
 
 [[package]]

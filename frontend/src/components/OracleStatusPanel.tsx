@@ -107,6 +107,7 @@ export function OracleStatusPanel() {
           Submit a proof
         </h2>
         <textarea
+          aria-label="Oracle proof JSON"
           value={payloadDraft}
           onChange={(e) => setPayloadDraft(e.target.value)}
           rows={5}

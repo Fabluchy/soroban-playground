@@ -348,6 +348,7 @@ export default function RateLimitsPage() {
                 <button
                   onClick={fetchApiKeys}
                   disabled={loading}
+                  aria-label="Refresh rate limits"
                   className="p-1 hover:bg-slate-700 rounded transition disabled:opacity-50"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -442,6 +443,7 @@ export default function RateLimitsPage() {
                         </code>
                         <button
                           onClick={() => handleCopy(selectedKey.keyPrefix)}
+                          aria-label="Refresh rate limits"
                           className="p-1 hover:bg-slate-700 rounded transition"
                         >
                           <Copy className="w-4 h-4" />

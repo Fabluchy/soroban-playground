@@ -631,7 +631,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-400">
                   {stat.label}
                 </p>
-                <h3 className="mt-1 text-2xl font-bold">{stat.value}</h3>
+                <h2 className="mt-1 text-2xl font-bold">{stat.value}</h2>
               </div>
               <stat.icon className={`${stat.color} h-6 w-6`} />
             </div>
@@ -641,11 +641,11 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6 lg:col-span-2">
-          <h3 className="mb-5 text-lg font-semibold">Traffic Real-time</h3>
+          <h2 className="mb-5 text-lg font-semibold">Traffic Real-time</h2>
           <Sparkline values={history.map((item) => item.hits)} />
         </div>
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-          <h3 className="mb-5 text-lg font-semibold">Event Quality</h3>
+          <h2 className="mb-5 text-lg font-semibold">Event Quality</h2>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm text-gray-400">
@@ -687,9 +687,9 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-          <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold">
+          <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
             <Settings className="h-5 w-5" /> Dynamic Rate Limits
-          </h3>
+          </h2>
           <div className="space-y-5">
             {["compile", "invoke", "deploy", "global"].map((endpoint) => (
               <div key={endpoint} className="space-y-3">
@@ -703,6 +703,7 @@ export default function AdminDashboard() {
                 </div>
                 <input
                   type="range"
+                  aria-label={`${endpoint} rate limit`}
                   min="1"
                   max="500"
                   value={config[endpoint] || 10}
@@ -731,7 +732,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-          <h3 className="mb-5 text-lg font-semibold">Version Distribution</h3>
+          <h2 className="mb-5 text-lg font-semibold">Version Distribution</h2>
           <VersionDistribution
             distribution={eventMetrics.versionDistribution || {}}
           />
@@ -741,9 +742,9 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
               <GitCompare className="h-5 w-5" /> Event Validation
-            </h3>
+            </h2>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleValidateEvent}
@@ -766,6 +767,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <textarea
+            aria-label="Event payload JSON"
             value={eventJson}
             onChange={(event) => setEventJson(event.target.value)}
             spellCheck={false}
@@ -798,9 +800,9 @@ export default function AdminDashboard() {
 
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
               <Database className="h-5 w-5" /> Schema Registry
-            </h3>
+            </h2>
             <button
               onClick={handleRegisterSchema}
               className="flex items-center gap-2 rounded bg-emerald-600 px-3 py-2 text-sm transition-colors hover:bg-emerald-500"
@@ -809,6 +811,7 @@ export default function AdminDashboard() {
             </button>
           </div>
           <textarea
+            aria-label="Event schema JSON"
             value={schemaJson}
             onChange={(event) => setSchemaJson(event.target.value)}
             spellCheck={false}
@@ -839,9 +842,9 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-          <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold">
+          <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
             <FileWarning className="h-5 w-5" /> Event Quarantine
-          </h3>
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -888,9 +891,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-          <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold">
+          <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
             <AlertTriangle className="h-5 w-5" /> Schema Detection
-          </h3>
+          </h2>
           {detectionResult ? (
             <pre className="max-h-96 overflow-auto rounded-lg bg-gray-950 p-4 text-xs text-gray-300">
               {JSON.stringify(
@@ -928,9 +931,9 @@ export default function AdminDashboard() {
       </div>
 
       <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-6">
-        <h3 className="mb-5 flex items-center gap-2 text-lg font-semibold">
+        <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
           <Users className="h-5 w-5" /> Top Requests by IP
-        </h3>
+        </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

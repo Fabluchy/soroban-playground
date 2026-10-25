@@ -53,7 +53,11 @@ const swaggerOptions: swaggerUi.SwaggerOptions = {
   customSiteTitle: 'Soroban Playground - Interactive API Docs',
 };
 
-router.use('/swagger', swaggerUi.serve, swaggerUi.setup(openapiSpecification, swaggerOptions));
+router.use(
+  '/swagger',
+  swaggerUi.serve,
+  swaggerUi.setup(openapiSpecification, swaggerOptions)
+);
 
 // 3. Interactive Redoc Documentation Interface
 router.get(

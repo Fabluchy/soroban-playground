@@ -122,8 +122,17 @@ export function deployContract(contract, { signal, onProgress } = {}) {
         contract.wasmPath,
         '--source-account',
         contract.sourceAccount,
-        '--network',
-        contract.network,
+        ...(contract.preflight
+          ? [
+              '--rpc-url',
+              contract.preflight.rpcUrl,
+              '--network-passphrase',
+              contract.preflight.passphrase,
+              '--salt',
+              contract.preflight.salt,
+              '--optimize=false',
+            ]
+          : ['--network', contract.network]),
       ],
       {
         shell: false,
@@ -201,6 +210,17 @@ export function deployContract(contract, { signal, onProgress } = {}) {
       if (code === 0) {
         const contractId =
           stdout.trim() || `C${contract.id.padEnd(55, '0').slice(0, 55)}`;
+        if (
+          contract.preflight &&
+          contractId !== contract.preflight.contractId
+        ) {
+          finish(
+            new Error(
+              'CLI returned a contract address different from the pre-flight preview'
+            )
+          );
+          return;
+        }
         recordTamperEvidentAuditLog({
           action: 'contract_deploy',
           contractId,

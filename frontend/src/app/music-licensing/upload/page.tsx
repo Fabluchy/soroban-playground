@@ -79,6 +79,7 @@ export default function MintLicense() {
                     Genre
                   </label>
                   <select
+                    aria-label="License type"
                     value={genre}
                     onChange={(e) => setGenre(e.target.value)}
                     className="w-full bg-[#0A0A10] border border-white/10 rounded-md p-4 text-white focus:outline-none focus:border-[#06B6D4] transition-all appearance-none cursor-pointer"
@@ -140,9 +141,9 @@ export default function MintLicense() {
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
               </div>
-              <h3 className="font-epilogue text-xl font-bold mb-2 text-white">
+              <h2 className="font-epilogue text-xl font-bold mb-2 text-white">
                 Drag & Drop Audio
-              </h3>
+              </h2>
               <p className="text-sm text-[#d6c0d3] text-center">
                 Supports high-quality .WAV or .MP3 up to 50MB
               </p>

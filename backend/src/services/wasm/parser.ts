@@ -170,7 +170,8 @@ export class WasmParser {
           this.parseContractSpec(section.payload);
         }
       } else {
-        section.name = SectionTypeNames[sectionType] || `unknown_${sectionType}`;
+        section.name =
+          SectionTypeNames[sectionType] || `unknown_${sectionType}`;
 
         switch (sectionType) {
           case SectionType.Import:
@@ -417,9 +418,10 @@ function arraysEqual(a: number[], b: number[]): boolean {
 /**
  * Validate WASM exports against Soroban spec
  */
-export function validateSorobanExports(
-  metadata: WasmMetadata
-): { valid: boolean; errors: string[] } {
+export function validateSorobanExports(metadata: WasmMetadata): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Soroban contracts must export invoke function
@@ -442,9 +444,10 @@ export function validateSorobanExports(
 /**
  * Validate host function imports against Soroban spec
  */
-export function validateSorobanImports(
-  metadata: WasmMetadata
-): { valid: boolean; errors: string[] } {
+export function validateSorobanImports(metadata: WasmMetadata): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Soroban host functions are in 'soroban_host' module

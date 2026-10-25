@@ -151,6 +151,9 @@ export default function Console({
 
       <div
         ref={viewportRef}
+        tabIndex={0}
+        role="region"
+        aria-label="Console output log"
         onScroll={onScroll}
         className="flex-1 overflow-y-auto font-mono text-xs leading-6 text-gray-300"
       >

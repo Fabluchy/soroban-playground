@@ -90,7 +90,12 @@ export function Dashboard() {
         </div>
 
         <div className="mt-8 h-[200px] w-full">
-          <Line data={chartData} options={chartOptions as any} />
+          <Line
+            aria-label="Treasury total value locked over the past week"
+            role="img"
+            data={chartData}
+            options={chartOptions as any}
+          />
         </div>
       </div>
     </div>

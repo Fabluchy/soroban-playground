@@ -534,6 +534,7 @@ export default function LotteryDashboard({
           )}
           <button
             onClick={refresh}
+            aria-label="Refresh lottery data"
             disabled={isLoading}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
           >

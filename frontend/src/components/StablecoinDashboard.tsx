@@ -327,7 +327,12 @@ export default function StablecoinDashboard({
           {/* Price Chart */}
           <div className="bg-slate-800 p-4 rounded-lg">
             <div className="h-64">
-              <Line data={chartData} options={chartOptions} />
+              <Line
+                aria-label="Stablecoin price history"
+                role="img"
+                data={chartData}
+                options={chartOptions}
+              />
             </div>
           </div>
 

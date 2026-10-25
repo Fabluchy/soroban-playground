@@ -129,6 +129,15 @@ export default function AuditExplorer({
               >
                 {/* Summary Card */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={expandedId === log.id}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setExpandedId(expandedId === log.id ? null : log.id);
+                    }
+                  }}
                   className="flex items-center justify-between p-4 cursor-pointer"
                   onClick={() =>
                     setExpandedId(expandedId === log.id ? null : log.id)
@@ -140,9 +149,9 @@ export default function AuditExplorer({
                         <Clock size={10} />
                         {format(new Date(log.timestamp), "HH:mm:ss · MMM d")}
                       </span>
-                      <h4 className="text-sm font-bold text-slate-200 mt-0.5">
+                      <h3 className="text-sm font-bold text-slate-200 mt-0.5">
                         {log.event_type.replace(/_/g, " ")}
-                      </h4>
+                      </h3>
                     </div>
 
                     <div className="flex items-center gap-3 ml-4">
@@ -177,9 +186,9 @@ export default function AuditExplorer({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* JSON Payload & Diff */}
                       <div className="space-y-3">
-                        <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                           <Database size={12} /> State Payload
-                        </h5>
+                        </h4>
                         <div className="rounded-xl bg-slate-950 p-4 overflow-x-auto border border-white/5 max-h-[300px] custom-scrollbar">
                           <pre className="text-[11px] leading-relaxed text-emerald-400 font-mono">
                             {JSON.stringify(JSON.parse(log.payload), null, 2)}
@@ -189,9 +198,9 @@ export default function AuditExplorer({
 
                       {/* Cryptographic Linkage */}
                       <div className="space-y-4">
-                        <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                           <ShieldCheck size={12} /> Cryptographic Proof
-                        </h5>
+                        </h4>
 
                         <div className="space-y-4 rounded-xl bg-slate-950/50 p-5 border border-white/5">
                           {/* Hash Chaining Viz */}

@@ -28,11 +28,20 @@ const DIFFICULTY_COLOR: Record<Template["difficulty"], string> = {
 
 /** #1526 — one-line honest state for the workspace sync. */
 const SYNC_BADGE: Record<string, { label: string; className: string }> = {
-  idle: { label: "Local only", className: "border-slate-700 text-slate-400" },
+  idle: { label: "Local only", className: "border-slate-700 text-slate-700" },
   loading: { label: "Syncing…", className: "border-sky-500/40 text-sky-300" },
-  synced: { label: "Synced", className: "border-emerald-500/40 text-emerald-300" },
-  queued: { label: "Queued for sync", className: "border-amber-500/40 text-amber-300" },
-  offline: { label: "Saved offline", className: "border-amber-500/40 text-amber-300" },
+  synced: {
+    label: "Synced",
+    className: "border-emerald-500/40 text-emerald-300",
+  },
+  queued: {
+    label: "Queued for sync",
+    className: "border-amber-500/40 text-amber-300",
+  },
+  offline: {
+    label: "Saved offline",
+    className: "border-amber-500/40 text-amber-300",
+  },
   error: { label: "Sync failed", className: "border-red-500/40 text-red-300" },
 };
 
@@ -112,7 +121,7 @@ export default function TemplateLibraryPage() {
   const previewTemplate = TEMPLATES.find((t) => t.id === previewId);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="template-library min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-5">
         <div className="max-w-6xl mx-auto">
@@ -158,7 +167,7 @@ export default function TemplateLibraryPage() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0">
+        <section className="flex-1 min-w-0">
           {/* Search bar */}
           <FavoritesSearchBar
             onSearch={setSearchQuery}
@@ -294,7 +303,7 @@ export default function TemplateLibraryPage() {
               })}
             </div>
           )}
-        </main>
+        </section>
       </div>
     </div>
   );

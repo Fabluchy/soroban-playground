@@ -78,6 +78,7 @@ export default function SubmitBugReport() {
               Severity Level
             </label>
             <select
+              aria-label="Bug severity"
               value={severity}
               onChange={(e) => setSeverity(e.target.value)}
               className="w-full bg-[#0e0e0f]/50 border border-white/10 rounded-md p-4 text-white focus:outline-none focus:border-[#00FFFF] focus:shadow-[0_0_10px_rgba(0,255,255,0.2)] transition-all appearance-none cursor-pointer"

@@ -71,7 +71,10 @@ describe('ZeroCopyTransferPipeline', () => {
         },
       });
 
-      const metrics = await smallChunkPipeline.transferFile(testFilePath, destStream);
+      const metrics = await smallChunkPipeline.transferFile(
+        testFilePath,
+        destStream
+      );
       expect(metrics.bytesTransferred).toBe(testContent.length);
     });
 

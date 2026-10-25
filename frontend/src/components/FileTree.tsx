@@ -55,6 +55,16 @@ export interface FileTreeNode {
    * If omitted the extension is inferred from `name`.
    */
   extension?: string;
+  /**
+   * Marks the file as having uncommitted changes (issue #1727).
+   * The explorer renders a live status marker next to the file name.
+   */
+  dirty?: boolean;
+  /**
+   * Optional short status badge, e.g. `"M"`, `"A"` or `"D"`.
+   * Defaults to `"M"` when `dirty` is set.
+   */
+  status?: string;
 }
 
 export interface FileTreeProps {
@@ -177,8 +187,23 @@ const FileNode = memo(function FileNode({
         ].join(" ")}
       />
       <span className="truncate">{node.name}</span>
+      {node.dirty && (
+        <span
+          data-testid="filetree-dirty"
+          title="Uncommitted changes"
+          aria-label={`Uncommitted changes in ${node.name}`}
+          className="ml-auto shrink-0 rounded bg-amber-400/15 px-1 font-mono text-[9px] font-semibold text-amber-300"
+        >
+          {node.status ?? "M"}
+        </span>
+      )}
       {ext && (
-        <span className="ml-auto font-mono text-[9px] text-slate-600 group-hover:text-slate-500 shrink-0">
+        <span
+          className={[
+            "font-mono text-[9px] text-slate-600 group-hover:text-slate-500 shrink-0",
+            node.dirty ? "ml-1" : "ml-auto",
+          ].join(" ")}
+        >
           .{ext}
         </span>
       )}

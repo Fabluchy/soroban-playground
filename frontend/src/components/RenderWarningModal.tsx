@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useModalAccessibility } from "@/accessibility/useModalAccessibility";
 import { Server, X, Info } from "lucide-react";
 
 export default function RenderWarningModal() {
@@ -18,6 +19,8 @@ export default function RenderWarningModal() {
     setIsOpen(false);
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalAccessibility(dialogRef, isOpen, handleClose);
   if (!isOpen) return null;
 
   return (
@@ -26,7 +29,7 @@ export default function RenderWarningModal() {
         className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
         onClick={handleClose}
       />
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-slate-900 border border-slate-700 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="render-warning-title" aria-describedby="render-warning-description" className="relative w-full max-w-md overflow-hidden rounded-3xl bg-slate-900 border border-slate-700 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
         {/* Glow effect */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-cyan-500/20 blur-[60px] pointer-events-none" />
 
@@ -36,6 +39,7 @@ export default function RenderWarningModal() {
               <Server size={28} />
             </div>
             <button
+              aria-label="Close backend warming notice"
               onClick={handleClose}
               className="p-2 -mr-2 -mt-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
@@ -43,10 +47,10 @@ export default function RenderWarningModal() {
             </button>
           </div>
 
-          <h2 className="text-xl font-bold text-white mb-2">
+          <h2 id="render-warning-title" className="text-xl font-bold text-white mb-2">
             Backend Warming Up
           </h2>
-          <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <div id="render-warning-description" className="space-y-4 text-sm text-slate-300 leading-relaxed">
             <p>
               Welcome to the Soroban Playground! Please note that our backend
               infrastructure is currently hosted on{" "}

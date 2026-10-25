@@ -11,7 +11,7 @@ describe('Accessibility Helpers', () => {
   it('creates and announces messages in the ARIA live region', (done) => {
     liveRegionManager.announce('Contract deployment succeeded', 'assertive');
 
-    const region = document.getElementById('a11y-live-region');
+    const region = document.getElementById('a11y-live-region-assertive');
     expect(region).not.toBeNull();
     expect(region?.getAttribute('aria-live')).toBe('assertive');
 

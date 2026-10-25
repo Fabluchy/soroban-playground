@@ -18,8 +18,6 @@
  * in plain ES2018 and avoids any import.
  */
 
-/* eslint-env serviceworker */
-
 const VERSION = "v1";
 const SHELL_CACHE = `sp-shell-${VERSION}`;
 const RUNTIME_CACHE = `sp-runtime-${VERSION}`;

@@ -50,7 +50,7 @@ const FavoritesFilter: React.FC<FavoritesFilterProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-600" />
-          <h3 className="font-semibold text-sm text-gray-900">Filters</h3>
+          <h2 className="font-semibold text-sm text-gray-900">Filters</h2>
           {activeCount > 0 && (
             <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
               {activeCount}
@@ -70,7 +70,7 @@ const FavoritesFilter: React.FC<FavoritesFilterProps> = ({
       {/* Categories */}
       {availableCategories.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-xs font-medium text-gray-700 mb-2">Categories</h4>
+          <h3 className="text-xs font-medium text-gray-700 mb-2">Categories</h3>
           <div className="flex flex-wrap gap-1.5">
             {availableCategories.map((cat) => {
               const active = filters.categories.includes(cat);
@@ -96,7 +96,7 @@ const FavoritesFilter: React.FC<FavoritesFilterProps> = ({
       {/* Tags */}
       {availableTags.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-gray-700 mb-2">Tags</h4>
+          <h3 className="text-xs font-medium text-gray-700 mb-2">Tags</h3>
           <div className="flex flex-wrap gap-1.5">
             {availableTags.map((tag) => {
               const active = filters.tags.includes(tag);

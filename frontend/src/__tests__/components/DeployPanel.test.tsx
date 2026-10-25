@@ -36,13 +36,19 @@ describe("DeployPanel", () => {
   it('shows spinner and "Compiling..." when compiling', () => {
     render(<DeployPanel {...defaultProps} isCompiling />);
     expect(screen.getByText("Compiling...")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /compiling/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /compiling/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
 
   it('shows spinner and "Deploying..." when deploying', () => {
     render(<DeployPanel {...defaultProps} hasCompiled isDeploying />);
     expect(screen.getByText("Deploying...")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /deploying/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /deploying/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
 
   it("enables deploy after successful compile", () => {
@@ -123,7 +129,10 @@ describe("DeployPanel", () => {
 
   it("disables both buttons while compiling", () => {
     render(<DeployPanel {...defaultProps} isCompiling />);
-    expect(screen.getByRole("button", { name: /compiling/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /compiling/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     expect(
       screen.getByRole("button", { name: /deploy to testnet/i }),
     ).toBeDisabled();
@@ -132,7 +141,10 @@ describe("DeployPanel", () => {
   it("disables both buttons while deploying", () => {
     render(<DeployPanel {...defaultProps} hasCompiled isDeploying />);
     expect(screen.getByRole("button", { name: /compile/i })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /deploying/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /deploying/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
 
   it("does not render contract ID on compile error even if contractId provided", () => {

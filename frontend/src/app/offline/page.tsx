@@ -48,7 +48,7 @@ export default function OfflinePage() {
   }, [flush]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+    <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
       <div className="flex items-start gap-4">
         <span
           aria-hidden="true"
@@ -212,6 +212,6 @@ export default function OfflinePage() {
             : ""}
         </p>
       </footer>
-    </main>
+    </section>
   );
 }

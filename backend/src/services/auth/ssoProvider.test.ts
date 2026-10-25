@@ -75,7 +75,10 @@ describe('SSOProvider', () => {
         </saml:Assertion>
       `;
 
-      const result = await provider.validateSAMLAssertion(assertionXml, 'https://idp.example.com');
+      const result = await provider.validateSAMLAssertion(
+        assertionXml,
+        'https://idp.example.com'
+      );
       expect(result.valid).toBe(true);
       expect(result.assertion).toBeDefined();
     });
@@ -108,7 +111,10 @@ describe('SSOProvider', () => {
         </saml:Assertion>
       `;
 
-      const result = await provider.validateSAMLAssertion(assertionXml, 'https://idp.example.com');
+      const result = await provider.validateSAMLAssertion(
+        assertionXml,
+        'https://idp.example.com'
+      );
       if (result.assertion) {
         expect(result.assertion.attributes).toBeDefined();
       }
@@ -124,9 +130,12 @@ describe('SSOProvider', () => {
         </saml:Assertion>
       `;
 
-      const result = await provider.validateSAMLAssertion(assertionXml, 'https://idp.example.com');
+      const result = await provider.validateSAMLAssertion(
+        assertionXml,
+        'https://idp.example.com'
+      );
       expect(result.valid).toBe(false);
-      expect(result.errors.some(e => e.includes('expired'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('expired'))).toBe(true);
     });
   });
 
@@ -167,7 +176,10 @@ describe('SSOProvider', () => {
         updatedAt: Date.now(),
       };
 
-      const authUrl = provider.generateOIDCAuthorizationUrl(config, 'https://example.com/callback');
+      const authUrl = provider.generateOIDCAuthorizationUrl(
+        config,
+        'https://example.com/callback'
+      );
       expect(authUrl).toContain('code_challenge');
       expect(authUrl).toContain('state=');
     });
@@ -226,7 +238,10 @@ describe('SSOProvider', () => {
         customAttributeMappings: new Map(),
       };
 
-      const claims = await provider.mapIdentityClaimsToRoles(assertion, roleMapping);
+      const claims = await provider.mapIdentityClaimsToRoles(
+        assertion,
+        roleMapping
+      );
       expect(claims.email).toBe('user@example.com');
       expect(claims.roles).toContain('user'); // default
       expect(claims.groups).toContain('engineering');
@@ -259,18 +274,27 @@ describe('SSOProvider', () => {
     });
 
     test('should verify domain ownership', async () => {
-      const dnsRecord = 'v=spf1 _soroban-sso-verify.example.com include:spf.example.com ~all';
-      const valid = await provider.verifyDomainOwnership('example.com', dnsRecord);
+      const dnsRecord =
+        'v=spf1 _soroban-sso-verify.example.com include:spf.example.com ~all';
+      const valid = await provider.verifyDomainOwnership(
+        'example.com',
+        dnsRecord
+      );
       expect(typeof valid).toBe('boolean');
     });
   });
 
   describe('Audit Logging', () => {
     test('should log SSO audit events', async () => {
-      await provider.logAuditEvent('example.com', 'sso_login', {
-        method: 'saml',
-        status: 'success',
-      }, 'user-123');
+      await provider.logAuditEvent(
+        'example.com',
+        'sso_login',
+        {
+          method: 'saml',
+          status: 'success',
+        },
+        'user-123'
+      );
 
       const trail = await provider.getAuditTrail('example.com', 10);
       expect(Array.isArray(trail)).toBe(true);
@@ -292,7 +316,7 @@ describe('SSOProvider', () => {
       expect(providers.length).toBeGreaterThan(0);
 
       // Check for major providers
-      const providerNames = providers.map(p => p.provider);
+      const providerNames = providers.map((p) => p.provider);
       expect(providerNames).toContain('Okta');
       expect(providerNames).toContain('Google Workspace');
       expect(providerNames).toContain('Microsoft Entra ID (Azure AD)');

@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
 
 import { initializeTracing } from './tracing.js';
+import { tracePropagationMiddleware } from './telemetry/middleware.js';
 import config from './config/index.js';
 import { validateEnv } from './config/env.js';
 if (process.env.NODE_ENV !== 'test') {
@@ -29,6 +30,7 @@ import {
 } from './config/http2Config.js';
 
 import { http2PushMiddleware } from './middleware/http2Push.js';
+import { chaosInjector } from './middleware/chaosInjector.js';
 
 import apiRouter from './routes/api.js';
 
@@ -105,6 +107,8 @@ import { startMemoryLeakDetector } from './services/memoryLeakDetector.js';
 
 import { contractEventIndexer } from './services/contractEventIndexer.js';
 
+import { kafkaEventConsumer } from './services/kafka/eventConsumer.ts';
+
 import { runStartupMigrations } from './services/migrationService.js';
 
 import healthService from './services/healthService.js';
@@ -120,6 +124,7 @@ import deployQueueRoute from './routes/deployQueue.js';
 import backupRoute from './routes/backup.js';
 
 import { startBackupScheduler } from './services/backupScheduler.js';
+import { startAuditPartitionWorkerFromEnv } from './database/auditPartitionWorker.js';
 
 import {
   initializeQueues,
@@ -155,6 +160,11 @@ import queuesRoute from './routes/queues.js';
 import rpcRoute from './routes/rpc.js';
 
 import { validateStartupEnv } from './config/envSchema.js';
+import {
+  mountGrpcGateway,
+  shutdownGrpcServer,
+  startGrpcServer,
+} from './grpc/index.js';
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
@@ -182,6 +192,8 @@ if (process.env.NODE_ENV !== 'test') {
 const app = express();
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal', '10.0.0.0/8']);
 let server;
+let grpcServer;
+let grpcGateway;
 let websocketRedisClient = null;
 
 // TLS/SSL Hardening configuration — HTTP/2 ALPN prefers h2, falls back to 1.1.
@@ -264,6 +276,17 @@ app.use(cookieParser());
 app.use(compressionMiddleware);
 app.use(http2PushMiddleware);
 
+// Header-driven fault injection for resilience testing; no-op unless
+// CHAOS_ENABLED=true outside production (Issue #1770).
+app.use(chaosInjector);
+
+// [BE-10] W3C Trace Context propagation — extracts `traceparent` / `tracestate`
+// from incoming requests and exposes the resolved trace ID as `X-Trace-Id` on
+// every response. The global W3CTraceContextPropagator registered by
+// telemetry/tracer.ts handles the OTel-level propagation; this middleware
+// surfaces the trace ID at the HTTP layer.
+app.use(tracePropagationMiddleware());
+
 // Strict Transport Security (HSTS) headers
 app.use((req, res, next) => {
   res.setHeader(
@@ -326,6 +349,11 @@ app.use('/api/queues', queuesRoute);
 app.use('/api/rpc', rpcRoute);
 app.use('/metrics', metricsRoute);
 
+const grpcEnabled = process.env.GRPC_ENABLED !== 'false';
+if (grpcEnabled) {
+  grpcGateway = mountGrpcGateway(app);
+}
+
 app.use(negotiateApiVersion);
 app.use(deprecationHeaders);
 
@@ -335,6 +363,8 @@ setupSwagger(app);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+let auditPartitionWorker = { stop: async () => {} };
+
 async function start() {
   try {
     await initializeDatabase();
@@ -343,6 +373,9 @@ async function start() {
     await initializeCompileService();
     await oracleWorkerPool.start();
     await contractEventIndexer.start();
+    if (process.env.KAFKA_ENABLED === 'true') {
+      await kafkaEventConsumer.start();
+    }
     await LedgerSyncService.start();
     await credentialRotationService.start();
     await featureFlagService.initialize();
@@ -353,8 +386,35 @@ async function start() {
     startCleanupWorker();
     startMemoryLeakDetector();
     startBackupScheduler();
+    auditPartitionWorker = startAuditPartitionWorkerFromEnv();
     startWebhookDispatcher();
     setupWebsocketServer(server);
+    if (grpcEnabled) {
+      const host = process.env.GRPC_HOST || '127.0.0.1';
+      const tls = process.env.GRPC_TLS === 'true';
+      const normalizedHost = host.toLowerCase();
+      const isLoopback =
+        normalizedHost === 'localhost' ||
+        normalizedHost === '::1' ||
+        normalizedHost.startsWith('127.');
+      if (process.env.NODE_ENV === 'production' && !tls && !isLoopback) {
+        throw new Error(
+          'GRPC_TLS must be enabled before exposing gRPC beyond loopback'
+        );
+      }
+      if (tls && (!httpsOptions.key || !httpsOptions.cert)) {
+        throw new Error(
+          'GRPC_TLS requires SSL_KEY_PATH and SSL_CERT_PATH certificates'
+        );
+      }
+      grpcServer = await startGrpcServer(new Map(), new Map(), {
+        host,
+        port: Number(process.env.GRPC_PORT || 50051),
+        tls,
+        certChain: tls ? Buffer.from(httpsOptions.cert) : undefined,
+        privateKey: tls ? Buffer.from(httpsOptions.key) : undefined,
+      });
+    }
     server.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
@@ -371,9 +431,13 @@ async function shutdown(signal) {
     stopOriginCacheRefresh();
     stopCleanupWorker();
     stopWebhookDispatcher();
+    await auditPartitionWorker.stop();
     await closeWebsocketServer();
+    grpcGateway?.close();
+    if (grpcServer) await shutdownGrpcServer(grpcServer);
     await oracleWorkerPool.stop();
     await contractEventIndexer.stop();
+    await kafkaEventConsumer.stop();
     await LedgerSyncService.stop();
     await credentialRotationService.stop();
     await cacheInvalidator.stop();

@@ -10,6 +10,9 @@ interface DeployPanelProps {
   compileSummary?: string;
   compileError?: string | null;
   contractId?: string;
+  preflight?: React.ReactNode;
+  deploymentAllowed?: boolean;
+  networkLabel?: string;
 }
 
 export default function DeployPanel({
@@ -21,6 +24,9 @@ export default function DeployPanel({
   compileSummary,
   compileError,
   contractId,
+  preflight,
+  deploymentAllowed = true,
+  networkLabel = "Testnet",
 }: DeployPanelProps) {
   const compileDisabledClasses = isCompiling
     ? "bg-gray-800 text-gray-500 cursor-not-allowed"
@@ -33,15 +39,19 @@ export default function DeployPanel({
 
   return (
     <div className="flex flex-col space-y-4 p-5 bg-gray-900 border border-gray-800 rounded-xl shadow-lg">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-widest flex items-center mb-2">
+      <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-widest flex items-center mb-2">
         <Rocket size={16} className="mr-2 text-primary-400" />
         Build & Deploy
-      </h3>
+      </h2>
 
+      {preflight}
       <div className="grid grid-cols-2 gap-3">
         <button
-          onClick={onCompile}
-          disabled={isCompiling}
+          onClick={() => {
+            if (!isCompiling) onCompile();
+          }}
+          aria-disabled={isCompiling}
+          aria-busy={isCompiling}
           className={`flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${compileDisabledClasses}`}
         >
           {isCompiling ? (
@@ -53,8 +63,12 @@ export default function DeployPanel({
         </button>
 
         <button
-          onClick={onDeploy}
-          disabled={!hasCompiled || isDeploying}
+          onClick={() => {
+            if (hasCompiled && !isDeploying && deploymentAllowed) onDeploy();
+          }}
+          disabled={!hasCompiled}
+          aria-disabled={isDeploying || !deploymentAllowed}
+          aria-busy={isDeploying}
           className={`flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${deployDisabledClasses}`}
         >
           {isDeploying ? (
@@ -62,7 +76,7 @@ export default function DeployPanel({
           ) : (
             <Play size={16} className="mr-2" />
           )}
-          {isDeploying ? "Deploying..." : "Deploy to Testnet"}
+          {isDeploying ? "Deploying..." : `Deploy to ${networkLabel}`}
         </button>
       </div>
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import express from 'express';
+import { runDeployPreflight } from '../../services/deployPreflight.js';
 import {
   asyncHandler,
   createHttpError,
@@ -19,6 +20,29 @@ import {
 } from '../../schemas/sorobanSchemas.js';
 
 const router = express.Router();
+
+router.post(
+  '/preflight',
+  rateLimitMiddleware('deploy'),
+  validateRequest({ body: deployBodyV1 }, { format: 'httpError' }),
+  asyncHandler(async (req, res, next) => {
+    try {
+      if (!req.body.preflight?.salt)
+        return next(
+          createHttpError(400, 'A 32-byte deployment salt is required')
+        );
+      return res.json(
+        await runDeployPreflight({
+          ...req.body,
+          network: req.body.network || 'testnet',
+          ...req.body.preflight,
+        })
+      );
+    } catch (error) {
+      return next(createHttpError(422, error.message));
+    }
+  })
+);
 
 router.post(
   '/',
@@ -41,6 +65,25 @@ router.post(
     };
 
     try {
+      if (req.body.preflight) {
+        if (
+          network === 'mainnet' &&
+          req.body.preflight.mainnetConfirmed !== true
+        )
+          return next(
+            createHttpError(400, 'Explicit Mainnet confirmation is required')
+          );
+        const report = await runDeployPreflight({
+          ...contract,
+          ...req.body.preflight,
+        });
+        if (!report.ready)
+          return next(
+            createHttpError(422, 'Deployment pre-flight checks did not pass')
+          );
+        contract.sourceAccount = report.sourceAccount;
+        contract.preflight = report;
+      }
       const result = await deployContract(contract);
       return res.json({
         success: true,

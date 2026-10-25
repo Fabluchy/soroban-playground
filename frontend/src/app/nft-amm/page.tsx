@@ -929,7 +929,7 @@ export default function NftAmmPage() {
   };
 
   return (
-    <main className="mx-auto max-w-7xl space-y-8 p-6 lg:p-8">
+    <section className="mx-auto max-w-7xl space-y-8 p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -1279,6 +1279,6 @@ export default function NftAmmPage() {
           onCreate={handleCreatePool}
         />
       )}
-    </main>
+    </section>
   );
 }

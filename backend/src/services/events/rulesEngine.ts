@@ -4,14 +4,7 @@
 import express, { Request, Response, Router } from 'express';
 
 export type ComparisonOperator =
-  | 'eq'
-  | 'neq'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'in'
-  | 'regex';
+  'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'regex';
 
 export type NotificationType = 'webhook' | 'slack' | 'telegram' | 'email';
 
@@ -91,9 +84,16 @@ export class RulesEngine {
       errors.push('Rule "targets" must be a non-empty array');
     } else {
       rule.targets.forEach((target: any, idx: number) => {
-        const validTypes: NotificationType[] = ['webhook', 'slack', 'telegram', 'email'];
+        const validTypes: NotificationType[] = [
+          'webhook',
+          'slack',
+          'telegram',
+          'email',
+        ];
         if (!target || !validTypes.includes(target.type)) {
-          errors.push(`Target at index ${idx} must have valid type: ${validTypes.join(', ')}`);
+          errors.push(
+            `Target at index ${idx} must have valid type: ${validTypes.join(', ')}`
+          );
         }
       });
     }
@@ -101,7 +101,11 @@ export class RulesEngine {
     return { valid: errors.length === 0, errors };
   }
 
-  private validateCondition(condition: any, errors: string[], path: string): void {
+  private validateCondition(
+    condition: any,
+    errors: string[],
+    path: string
+  ): void {
     if (!condition || typeof condition !== 'object') {
       errors.push(`${path}: Condition must be an object`);
       return;
@@ -113,12 +117,23 @@ export class RulesEngine {
     const hasField = 'field' in condition;
 
     if (!hasAnd && !hasOr && !hasNot && !hasField) {
-      errors.push(`${path}: Condition must specify "field", "and", "or", or "not"`);
+      errors.push(
+        `${path}: Condition must specify "field", "and", "or", or "not"`
+      );
       return;
     }
 
     if (hasField) {
-      const validOps: ComparisonOperator[] = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'regex'];
+      const validOps: ComparisonOperator[] = [
+        'eq',
+        'neq',
+        'gt',
+        'gte',
+        'lt',
+        'lte',
+        'in',
+        'regex',
+      ];
       if (typeof condition.field !== 'string') {
         errors.push(`${path}.field must be a string`);
       }
@@ -168,7 +183,9 @@ export class RulesEngine {
   public addRule(rule: EventRule): void {
     const validation = this.validateRule(rule);
     if (!validation.valid) {
-      throw new Error(`Invalid rule definition: ${validation.errors.join('; ')}`);
+      throw new Error(
+        `Invalid rule definition: ${validation.errors.join('; ')}`
+      );
     }
 
     this.rules.set(rule.id, rule);
@@ -232,7 +249,10 @@ export class RulesEngine {
     return Array.from(this.rules.values());
   }
 
-  public evaluateCondition(condition: RuleCondition, event: ContractEvent): boolean {
+  public evaluateCondition(
+    condition: RuleCondition,
+    event: ContractEvent
+  ): boolean {
     const composite = condition as CompositeCondition;
 
     // Short-circuit AND evaluation
@@ -284,9 +304,15 @@ export class RulesEngine {
     return event.payload?.[fieldPath];
   }
 
-  public compare(operator: ComparisonOperator, actual: any, expected: any): boolean {
+  public compare(
+    operator: ComparisonOperator,
+    actual: any,
+    expected: any
+  ): boolean {
     if (actual === undefined || actual === null) {
-      return operator === 'neq' ? expected !== null && expected !== undefined : false;
+      return operator === 'neq'
+        ? expected !== null && expected !== undefined
+        : false;
     }
 
     switch (operator) {
@@ -315,7 +341,10 @@ export class RulesEngine {
     }
   }
 
-  public async routeEvent(rule: EventRule, event: ContractEvent): Promise<void> {
+  public async routeEvent(
+    rule: EventRule,
+    event: ContractEvent
+  ): Promise<void> {
     for (const target of rule.targets) {
       try {
         const payload = {
@@ -330,7 +359,10 @@ export class RulesEngine {
           if (typeof fetch === 'function') {
             await fetch(endpoint, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...(target.headers || {}) },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(target.headers || {}),
+              },
               body: JSON.stringify(payload),
             }).catch(() => {});
           }
@@ -386,16 +418,24 @@ export class RulesEngine {
 
 export const rulesEngine = new RulesEngine();
 
-export function createRulesEngineRouter(engine: RulesEngine = rulesEngine): Router {
+export function createRulesEngineRouter(
+  engine: RulesEngine = rulesEngine
+): Router {
   const router = express.Router();
 
   router.post('/evaluate', (req: Request, res: Response) => {
     try {
       const event: ContractEvent = req.body;
       const results = engine.evaluateEvent(event);
-      res.json({ success: true, count: results.length, matches: results.filter((r) => r.matched) });
+      res.json({
+        success: true,
+        count: results.length,
+        matches: results.filter((r) => r.matched),
+      });
     } catch (err: any) {
-      res.status(400).json({ success: false, error: err?.message || String(err) });
+      res
+        .status(400)
+        .json({ success: false, error: err?.message || String(err) });
     }
   });
 

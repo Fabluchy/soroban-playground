@@ -30,3 +30,13 @@ export {
   OracleEventBus,
   sharedOracleEventBus,
 } from './oracleEvents.js';
+export {
+  FeeEstimator,
+  feeEstimator,
+  calculatePercentile,
+  computePercentiles,
+  computeResourceFee,
+  buildFeeRecommendations,
+  DEFAULT_FEE_CONFIG,
+  SUPPORTED_NETWORKS,
+} from './feeEstimatorCore.js';

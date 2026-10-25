@@ -24,7 +24,7 @@ export default function TreasuryPage() {
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
       <div className="fixed inset-0 bg-slate-950 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
           <div>
@@ -57,7 +57,7 @@ export default function TreasuryPage() {
             </div>
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }
