@@ -44,12 +44,15 @@ async function loadHeaderRules(): Promise<HeaderRule[]> {
     plugins: ["@babel/plugin-transform-modules-commonjs"],
   });
 
-  const module = { exports: { default: null as unknown } };
-  // eslint-disable-next-line no-new-func
+  const sandboxModule = { exports: { default: null as unknown } };
   const factory = new Function("module", "exports", "require", "process", "Buffer", code!);
-  factory(module, module.exports, require, process, Buffer);
+  factory(sandboxModule, sandboxModule.exports, require, process, Buffer);
 
-  const config = (module.exports as { default: { headers: () => Promise<HeaderRule[]> } }).default;
+  const config = (
+    sandboxModule.exports as {
+      default: { headers: () => Promise<HeaderRule[]> };
+    }
+  ).default;
   return config.headers();
 }
 

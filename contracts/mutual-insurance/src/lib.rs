@@ -620,7 +620,7 @@ mod tests {
         for i in 0..5_u32 {
             let holder = Address::generate(&env);
             let covered = Address::generate(&env);
-            let id = client.buy_policy(&holder, &covered, &1_000_000, &20_000, &500 + i);
+            let id = client.buy_policy(&holder, &covered, &1_000_000, &20_000, &(500 + i));
             assert_eq!(id, i as u64);
         }
         assert_eq!(client.total_coverage(), 5_000_000);

@@ -6,7 +6,7 @@ use crate::{Error, QuadraticGrants, QuadraticGrantsClient};
 use soroban_sdk::{
     testutils::Address as _,
     token::{Client as TokenClient, StellarAssetClient},
-    vec, Address, Env, String,
+    Address, Env, String,
 };
 
 // ── Harness ─────────────────────────────────────────────────────────────────
@@ -57,25 +57,25 @@ impl Harness {
     fn create_round(&self, matching_pool: i128, deadline: u64) -> u32 {
         self.client
             .create_round(&self.funder, &deadline, &matching_pool)
-            .unwrap()
     }
 
     fn register_project(&self, owner: &Address, round_id: u32, name: &str) -> u32 {
         self.client
-            .register_project(owner, round_id, &String::from_str(&self.env, name))
-            .unwrap()
+            .register_project(owner, &round_id, &String::from_str(&self.env, name))
     }
 
     fn contribute(&self, donor: &Address, project_id: u32, amount: i128) {
-        self.client.contribute(donor, project_id, amount);
+        StellarAssetClient::new(&self.env, &self.token_id).mint(donor, &amount);
+        self.token.approve(donor, &self.client.address, &amount, &0);
+        self.client.contribute(donor, &project_id, &amount);
     }
 
     fn close_round(&self, round_id: u32, caller: &Address) {
-        self.client.close_round(caller, round_id);
+        self.client.close_round(caller, &round_id);
     }
 
     fn match_awarded(&self, project_id: u32) -> i128 {
-        self.client.get_project(project_id).unwrap().match_awarded
+        self.client.get_project(&project_id).unwrap().match_awarded
     }
 
     fn balance(&self, who: &Address) -> i128 {
@@ -91,7 +91,10 @@ impl Harness {
 #[test]
 fn initializes_once() {
     let h = Harness::new();
-    assert!(h.client.is_verified(&h.admin));
+    assert_eq!(
+        h.client.try_initialize(&h.admin, &h.token_id),
+        Err(Ok(Error::AlreadyInitialized))
+    );
 }
 
 #[test]
@@ -103,14 +106,14 @@ fn credential_gates_donations() {
     let project_id = h.register_project(&owner, round_id, "Green");
 
     assert_eq!(
-        h.client.try_contribute(&donor, project_id, &100),
+        h.client.try_contribute(&donor, &project_id, &100),
         Err(Ok(Error::NotVerified))
     );
 
     h.verified(&donor);
     h.contribute(&donor, project_id, 100);
     assert_eq!(
-        h.client.get_project(project_id).unwrap().total_contributed,
+        h.client.get_project(&project_id).unwrap().total_contributed,
         100
     );
 }
@@ -165,21 +168,28 @@ fn close_round_allocates_entire_pool() {
     let owner = Address::generate(&h.env);
     let d1 = Address::generate(&h.env);
     let d2 = Address::generate(&h.env);
+    let d3 = Address::generate(&h.env);
+    let d4 = Address::generate(&h.env);
     h.verified(&d1);
     h.verified(&d2);
+    h.verified(&d3);
+    h.verified(&d4);
 
     let round_id = h.create_round(1_000, 1000);
     let pa = h.register_project(&owner, round_id, "A");
     let pb = h.register_project(&owner, round_id, "B");
 
     h.contribute(&d1, pa, 100);
-    h.contribute(&d2, pb, 100);
+    h.contribute(&d2, pa, 100);
+    h.contribute(&d3, pb, 100);
+    h.contribute(&d4, pb, 100);
 
     h.close_round(round_id, &h.admin);
 
     assert_eq!(h.match_awarded(pa), 500);
     assert_eq!(h.match_awarded(pb), 500);
-    assert_eq!(h.escrow_balance(), 0);
+    // Donations and the matching award stay escrowed until milestones release.
+    assert_eq!(h.escrow_balance(), 1_400);
 }
 
 #[test]
@@ -191,8 +201,9 @@ fn nobody_donated_pool_returned_escrow_zero() {
 
     h.close_round(round_id, &h.admin);
     assert_eq!(h.escrow_balance(), 0);
-    assert_eq!(h.client.get_round(round_id).unwrap().closed, true);
-    assert_eq!(h.balance(&h.funder), i128::MAX - 1_000);
+    assert_eq!(h.client.get_round(&round_id).unwrap().closed, true);
+    // The unallocated pool is refunded, so the funder is made whole.
+    assert_eq!(h.balance(&h.funder), i128::MAX);
 }
 
 // ── Access control & round lifecycle ────────────────────────────────────────
@@ -220,7 +231,7 @@ fn cannot_contribute_to_closed_round() {
     h.close_round(round_id, &h.admin);
 
     assert_eq!(
-        h.client.try_contribute(&donor, project_id, &100),
+        h.client.try_contribute(&donor, &project_id, &100),
         Err(Ok(Error::RoundClosed))
     );
 }
@@ -233,7 +244,7 @@ fn self_contribution_rejected() {
     let round_id = h.create_round(1_000, 1000);
     let project_id = h.register_project(&owner, round_id, "X");
     assert_eq!(
-        h.client.try_contribute(&owner, project_id, &100),
+        h.client.try_contribute(&owner, &project_id, &100),
         Err(Ok(Error::SelfContribution))
     );
 }
@@ -254,18 +265,21 @@ fn milestone_release_limited_to_escrow() {
     h.close_round(round_id, &h.admin);
 
     // Two milestones of 60 each -> escrow 100 covers both.
-    h.client.add_milestone(&owner, project_id, "m1", 60);
-    h.client.approve_milestone(&h.admin, project_id, 0);
+    h.client
+        .add_milestone(&owner, &project_id, &String::from_str(&h.env, "m1"), &60);
+    h.client.approve_milestone(&h.admin, &project_id, &0);
     assert_eq!(h.balance(&owner), 60);
 
-    h.client.add_milestone(&owner, project_id, "m2", 60);
+    h.client
+        .add_milestone(&owner, &project_id, &String::from_str(&h.env, "m2"), &60);
     // Escrow remaining = 40, requesting 60 -> InsufficientEscrow.
     assert_eq!(
-        h.client.try_add_milestone(&owner, project_id, "m2", 60),
-        Ok(())
+        h.client
+            .try_add_milestone(&owner, &project_id, &String::from_str(&h.env, "m2"), &60),
+        Ok(Ok(()))
     );
     assert_eq!(
-        h.client.try_approve_milestone(&h.admin, project_id, 1),
+        h.client.try_approve_milestone(&h.admin, &project_id, &1),
         Err(Ok(Error::InsufficientEscrow))
     );
 }
@@ -290,15 +304,15 @@ fn fraud_refunds_donors_pro_rata_and_funder_share() {
     h.close_round(round_id, &h.admin);
 
     // Escrow = 400 (donations) + match award. Flag + resolve as fraudulent.
-    h.client.flag_project(&d1, project_id);
-    h.client.resolve_dispute(&h.admin, project_id, true);
+    h.client.flag_project(&d1, &project_id);
+    h.client.resolve_dispute(&h.admin, &project_id, &true);
 
     // Nothing released, so remaining escrow = 400. Donation share = all 400.
     // Pro rata: d1 -> 100, d2 -> 300.
     assert_eq!(h.balance(&d1), 100);
     assert_eq!(h.balance(&d2), 300);
     assert_eq!(h.escrow_balance(), 0);
-    assert!(h.client.get_project(project_id).unwrap().refunded);
+    assert!(h.client.get_project(&project_id).unwrap().refunded);
 }
 
 #[test]
@@ -313,10 +327,10 @@ fn non_fraudulent_ruling_clears_flag_without_refund() {
     h.contribute(&donor, project_id, 100);
     h.close_round(round_id, &h.admin);
 
-    h.client.flag_project(&donor, project_id);
-    h.client.resolve_dispute(&h.admin, project_id, false);
+    h.client.flag_project(&donor, &project_id);
+    h.client.resolve_dispute(&h.admin, &project_id, &false);
 
-    assert!(!h.client.get_project(project_id).unwrap().flagged);
-    assert!(!h.client.get_project(project_id).unwrap().refunded);
+    assert!(!h.client.get_project(&project_id).unwrap().flagged);
+    assert!(!h.client.get_project(&project_id).unwrap().refunded);
     assert_eq!(h.escrow_balance(), 100);
 }
