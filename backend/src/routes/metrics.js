@@ -1,6 +1,7 @@
 import express from 'express';
 import client from 'prom-client';
 import { oracleLockRegistry } from '../services/oracle/lockMetrics.js';
+import { nonceManagerRegistry } from '../services/stellar/nonceMetrics.js';
 
 const router = express.Router();
 
@@ -302,6 +303,7 @@ router.get('/', async (req, res) => {
     const merged = await client.Registry.merge([
       register,
       oracleLockRegistry,
+      nonceManagerRegistry,
     ]).metrics();
     res.end(merged);
   } catch (ex) {

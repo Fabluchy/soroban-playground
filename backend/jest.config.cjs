@@ -15,6 +15,9 @@ module.exports = {
         configFile: path.resolve(__dirname, 'babel.config.cjs'),
       },
     ],
+    // TypeScript sources (e.g. src/services/stellar/nonceManager.ts) are
+    // stripped with the compiler API; see tsTransform.cjs.
+    '^.+\\.ts$': path.resolve(__dirname, 'tsTransform.cjs'),
   },
   moduleNameMapper: {
     '^../src/services/dbService\\.js$': path.resolve(
